@@ -22,7 +22,18 @@ library(plyr)
 x <- read.delim("Genotyping-007.010-01_copy.txt")
 dim(x) #478 columns, 333 rows
 x[1,1:17] # SNP data in rows 17 to 333
+class(x[5,17]) # character
 count(x$island) #  how many samples from each island there are
-count(x[,17])
+count(x[,333]) # how many of each base combination there are in a SNP column
+```
+
+```{r eval = FALSE}
+subx <- x[1:3,17:333] # making subset to experiment with
+str(subx)
+subx[1,1] <- NA
+subx[subx=="?"] <- NA
+homz <- c("T:T", "C:C", "G:G", "A:A")
+hetz <- c("T:A", "T:C", "T:G", "C:A", "C:T", "C:G", "A:T", "A:C", "A:G", "G:A", "G:T", "G:C")
+count(subx, )
 ```
 
