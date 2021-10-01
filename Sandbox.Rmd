@@ -1,0 +1,28 @@
+---
+title: "Sandbox"
+author: "Grace Saville"
+date: "01/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eval = FALSE}
+# Installing phylogenetics packages
+install.packages('ctv')
+library('ctv')
+install.views('Phylogenetics')
+update.views('Phylogenetics')
+library(plyr)
+```
+
+```{r eval = FALSE}
+x <- read.delim("Genotyping-007.010-01_copy.txt")
+dim(x) #478 columns, 333 rows
+x[1,1:17] # SNP data in rows 17 to 333
+count(x$island) #  how many samples from each island there are
+count(x[,17])
+```
+
