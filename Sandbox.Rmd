@@ -30,11 +30,11 @@ count(x[,333]) # how many of each base combination there are in a SNP column
 
 
 ```{r eval = FALSE}
-subx <- x[1:3,17:333] # making subset to experiment with
+subx <- x[1:10,17:333] # making subset to experiment with
 str(subx)
 # subx[subx=="?"] <- NA # not sure if I want to replace the ?'s with NA's
-homz <- c("T:T", "C:C", "G:G", "A:A")
-hetz <- c("T:A", "T:C", "T:G", "C:A", "C:T", "C:G", "A:T", "A:C", "A:G", "G:A", "G:T", "G:C")
-write.nexus(subx, file = "nexustest.nex")
+
+
+# write.nexus(subx, file = "nexustest.nex")
 ```
 
