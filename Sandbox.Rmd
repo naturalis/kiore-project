@@ -4,7 +4,7 @@ author: "Grace Saville"
 date: "01/10/2021"
 output: html_document
 ---
-
+# Preamble 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -19,22 +19,76 @@ library(plyr)
 library(ape)
 ```
 
+## Looking at the data
 ```{r eval = FALSE}
-x <- read.delim("Genotyping-007.010-01_copy.txt")
-dim(x) #478 columns, 333 rows
-x[1,1:17] # SNP data in rows 17 to 333
-class(x[5,17]) # character
-count(x$island) #  how many samples from each island there are
-count(x[,333]) # how many of each base combination there are in a SNP column
+data <- read.delim("Genotyping-007.010-01_copy.txt")
+dim(data) #478 columns, 333 rows
+data[1,1:17] # SNP data in rows 17 to 333
+class(data[5,17]) # character
+count(data$island) #  how many samples from each island there are
+count(data[,206]) # how many of each base combination there are in a SNP column
 ```
 
-
+## Making a subset
 ```{r eval = FALSE}
-subx <- x[1:10,17:333] # making subset to experiment with
-str(subx)
-# subx[subx=="?"] <- NA # not sure if I want to replace the ?'s with NA's
+sub <- data[1:10,17:30] # making subset to experiment with
+str(sub)
+# sub[sub=="?"] <- NA # not sure if I want to replace the ?'s with NA's
+summary(sub)
+str(sub)
 
-
-# write.nexus(subx, file = "nexustest.nex")
 ```
 
+# Heterozygousity experimenting
+```{r eval = FALSE}
+x <- c("A:A", "G:T", "C:C", "A:T", "T:A","T:T", "A:C", "C:A") # test vector
+hetz <- c("A:G", "G:A", "C:T", "T:C", "A:T", "T:A", "C:G", "G:C", "A:C", "C:A", "G:T", "T:G") # vector of heterozygous combinations
+homz <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
+
+# testing to see if I can identify what values are homozygous and heterozygous within a vector
+for (i in x){
+  if (i %in% hetz){print("E")}
+  else {print("O")}
+}
+
+# testing if I can replace the values
+for (i in 1:length(x)){
+  if (x[i] %in% hetz){x[i] <- "E"}
+  else {x[i] <- "O"}
+}
+```
+
+# Prep for making tree
+```{r eval = FALSE}
+
+```
+Adapted IUPAC code:  
+
+|Symbol|SNP bases|
+|:----:|:----:|
+|A|AA|
+|T|TT|
+|C|CC|
+|G|GG|
+|R (purine)|AG|
+|r (purine)|GA|
+|Y (pyrimidine)|CT|
+|y (pyrimidine)|TC|
+|W (weak)|AT|
+|w (weak)|TA|
+|S (strong)|CG|
+|s (strong)|GC|
+|M (amino)|AC|
+|m (amino)|CA|
+|K (keto)|GT|
+|k (keto)|TG|
+
+
+
+
+# Mantel test prep
+uses lat/long data, there are geospatial R packages that give exact distances on the globe between lat/long points which will be useful here 
+```{r}
+
+```
+for later: HKY85 model for distances model
