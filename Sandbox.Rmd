@@ -11,19 +11,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r eval = FALSE}
 # Installing phylogenetics packages
-install.packages('ctv')
-library('ctv')
-install.views('Phylogenetics')
-update.views('Phylogenetics')
+# install.packages('ctv')
+# library('ctv')
+# install.views('Phylogenetics')
+# update.views('Phylogenetics')
 library(plyr)
 library(ape)
+library(phylotools)
+library(stringr)
 ```
 
 ## Looking at the data
 ```{r eval = FALSE}
 data <- read.delim("Genotyping-007.010-01_copy.txt")
-dim(data) #478 columns, 333 rows
-data[1,1:17] # SNP data in rows 17 to 333
+dim(data) #478 rows, 332 columns
+data[1,1:16] # SNP data in columns 16 to 333
 class(data[5,17]) # character
 count(data$island) #  how many samples from each island there are
 count(data[,206]) # how many of each base combination there are in a SNP column
@@ -45,22 +47,53 @@ x <- c("A:A", "G:T", "C:C", "A:T", "T:A","T:T", "A:C", "C:A") # test vector
 hetz <- c("A:G", "G:A", "C:T", "T:C", "A:T", "T:A", "C:G", "G:C", "A:C", "C:A", "G:T", "T:G") # vector of heterozygous combinations
 homz <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
 
-# testing to see if I can identify what values are homozygous and heterozygous within a vector
+# testing to see if I can identify what values are homozygous and heterozygous within an example vector
 for (i in x){
   if (i %in% hetz){print("E")}
   else {print("O")}
 }
 
-# testing if I can replace the values
+# testing if I can replace the values in the above example vector 
 for (i in 1:length(x)){
   if (x[i] %in% hetz){x[i] <- "E"}
   else {x[i] <- "O"}
 }
+
+# trying another method for the subset dataframe:
+for (i in 1:nrow(sub)){
+  sub[i,][sub[i,] %in% hetz] <- "E"
+  sub[i,][sub[i,] %in% homz] <- "O"
+}
+
+# applying above for loop to entire df
+zydata <- data # making a copy of the data
+for (i in 1:nrow(zydata)){
+  zydata[i,][zydata[i,] %in% hetz] <- "E"
+  zydata[i,][zydata[i,] %in% homz] <- "O"
+}
+
+count(zydata[,105]) #column count
+sum(str_count(zydata[35,], "O")) # row count
+
+# could also try 0 for homo and 1 for hetero, therefore the lower the totals the lower the heterozygousity
+zydata2 <- data # making a copy of the data
+for (i in 1:nrow(zydata2)){
+  zydata2[i,][zydata2[i,] %in% hetz] <- 1
+  zydata2[i,][zydata2[i,] %in% homz] <- 0
+}
+
+zydata2[zydata2=="?"] <- NA # replacing ? with NA's 
+zydata2 <- zydata2[,16:332]
+zydata2 <- as.numeric(zydata2) #trying to change the characters to numbers
+class(zydata2) <- "numeric"
+class(zydata2[,1])
+
+
 ```
 
 # Prep for making tree
 ```{r eval = FALSE}
-
+dat2phylip(data, outfile = "test.phy") # testing this function that saves phylip files
 ```
 Adapted IUPAC code:  
 
