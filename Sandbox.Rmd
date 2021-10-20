@@ -19,6 +19,7 @@ library(plyr)
 library(ape)
 library(phylotools)
 library(stringr)
+library(dplyr)
 ```
 
 ## Looking at the data
@@ -66,28 +67,35 @@ for (i in 1:nrow(sub)){
 }
 
 # applying above for loop to entire df
-zydata <- data # making a copy of the data
-for (i in 1:nrow(zydata)){
-  zydata[i,][zydata[i,] %in% hetz] <- "E"
-  zydata[i,][zydata[i,] %in% homz] <- "O"
+z <- data # making a copy of the data
+for (i in 1:nrow(z)){
+  z[i,][z[i,] %in% hetz] <- "E"
+  z[i,][z[i,] %in% homz] <- "O"
 }
 
-count(zydata[,105]) #column count
-sum(str_count(zydata[35,], "O")) # row count
+count(z[,105]) #column count
+sum(str_count(z[35,], "E")) # row count
 
-# could also try 0 for homo and 1 for hetero, therefore the lower the totals the lower the heterozygousity
-zydata2 <- data # making a copy of the data
-for (i in 1:nrow(zydata2)){
-  zydata2[i,][zydata2[i,] %in% hetz] <- 1
-  zydata2[i,][zydata2[i,] %in% homz] <- 0
+# could also try 0 for homo and 1 for hetero, therefore the lower the totals the lower the heterozygousity, however the number of NA's could interfere with the totals
+z2 <- data # making a copy of the data
+for (i in 1:nrow(z2)){
+  z2[i,][z2[i,] %in% hetz] <- 1
+  z2[i,][z2[i,] %in% homz] <- 0
 }
 
-zydata2[zydata2=="?"] <- NA # replacing ? with NA's 
-zydata2 <- zydata2[,16:332]
-zydata2 <- as.numeric(zydata2) #trying to change the characters to numbers
-class(zydata2) <- "numeric"
-class(zydata2[,1])
+z2[z2=="?"] <- NA # replacing ? with NA's 
+for (i in 16:332) {class(z2[,i]) <- "numeric"} # changed the class to numeric for each column so the totals can be computed (wouldn't work without for loop for some reason?)
 
+z2 <- rowwise(z2) # making the df rowwise so i can make calculations by row easier
+names(z2)
+z2 <- mutate(z2, total = sum(c_across(X11_CHR1_101004452:X154_CHR9_95290356), na.rm = TRUE))
+z2[,333]
+
+# trying this method of adding row totals at the end to the E/O df
+z <- rowwise(z)
+summarise(z)
+mutate(z, Etotal = sum(str_count(z, "E")))
+sum(str_count(z[35,], "?")) # row count
 
 ```
 
@@ -116,6 +124,34 @@ Adapted IUPAC code:
 |K (keto)|GT|
 |k (keto)|TG|
 
+```{r}
+y <- data # making a copy
+# changing each SNP base combination to a single letter code
+y[y=="?"] <- "-"
+y[y=="A:A"] <- "A"
+y[y=="T:T"] <- "T"
+y[y=="C:C"] <- "C"
+y[y=="G:G"] <- "G"
+y[y=="A:G"] <- "R"
+y[y=="G:A"] <- "r"
+y[y=="C:T"] <- "Y"
+y[y=="T:C"] <- "y"
+y[y=="A:T"] <- "W"
+y[y=="T:A"] <- "w"
+y[y=="C:G"] <- "S"
+y[y=="G:C"] <- "s"
+y[y=="A:C"] <- "M"
+y[y=="C:A"] <- "m"
+y[y=="G:T"] <- "K"
+y[y=="T:G"] <- "k"
+
+names(y)
+y <- y[,-c(2:15)] # removing the rows with information other than the species key and the code above
+y <- tidyr::unite(y, bases, -1, sep = "", remove = TRUE) # merging all the base columns into one column so it can be converted easily into a phylip file,
+y[,1] <- gsub(".", "", y[,1])
+dat2phylip(y, outfile = "test.phy")
+x <- read.phylip("test.phy")
+```
 
 
 
