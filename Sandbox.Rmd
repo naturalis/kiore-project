@@ -101,7 +101,9 @@ sum(str_count(z[35,], "?")) # row count
 
 # Prep for making tree
 ```{r eval = FALSE}
-dat2phylip(data, outfile = "test.phy") # testing this function that saves phylip files
+x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
+dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
+# after some experimenting, spaces in the base strings aren't necessary, but 10 character length names ar needed, dashes "-" are allowed, no differentiation between upper and lower case, any letters allowed (not just ATCG and other IUPAC code)
 ```
 Adapted IUPAC code:  
 
@@ -112,17 +114,17 @@ Adapted IUPAC code:
 |C|CC|
 |G|GG|
 |R (purine)|AG|
-|r (purine)|GA|
+|I (purine)|GA|
 |Y (pyrimidine)|CT|
-|y (pyrimidine)|TC|
+|D (pyrimidine)|TC|
 |W (weak)|AT|
-|w (weak)|TA|
+|X (weak)|TA|
 |S (strong)|CG|
-|s (strong)|GC|
+|O (strong)|GC|
 |M (amino)|AC|
-|m (amino)|CA|
+|N (amino)|CA|
 |K (keto)|GT|
-|k (keto)|TG|
+|L (keto)|TG|
 
 ```{r}
 y <- data # making a copy
@@ -133,24 +135,43 @@ y[y=="T:T"] <- "T"
 y[y=="C:C"] <- "C"
 y[y=="G:G"] <- "G"
 y[y=="A:G"] <- "R"
-y[y=="G:A"] <- "r"
+y[y=="G:A"] <- "I"
 y[y=="C:T"] <- "Y"
-y[y=="T:C"] <- "y"
+y[y=="T:C"] <- "D"
 y[y=="A:T"] <- "W"
-y[y=="T:A"] <- "w"
+y[y=="T:A"] <- "X"
 y[y=="C:G"] <- "S"
-y[y=="G:C"] <- "s"
+y[y=="G:C"] <- "O"
 y[y=="A:C"] <- "M"
-y[y=="C:A"] <- "m"
+y[y=="C:A"] <- "N"
 y[y=="G:T"] <- "K"
-y[y=="T:G"] <- "k"
+y[y=="T:G"] <- "L"
 
 names(y)
 y <- y[,-c(2:15)] # removing the rows with information other than the species key and the code above
 y <- tidyr::unite(y, bases, -1, sep = "", remove = TRUE) # merging all the base columns into one column so it can be converted easily into a phylip file,
-y[,1] <- gsub(".", "", y[,1])
+y[,1] <- gsub("NBC.LAB.", "NBCLAB", y[,1]) # replacing part of the name of the rowname column so there is no punctuation and the names are exactly 10 characters long for the phylip file to work
+
 dat2phylip(y, outfile = "test.phy")
-x <- read.phylip("test.phy")
+# something wrong with the file, e.g. illegal characters or two of the same specimen
+summary(duplicated(y[,1])) # no. 40 row name is duplicated
+duplicated(y[,1], fromLast = FALSE)
+duplicated(y[,1], fromLast = TRUE) # no. 39 is duplicated w no. 40
+summary(duplicated(y)) # checking row 40 doesn't have the same code string as well
+y[39:40,1] # "NBCLAB2005" "NBCLAB2005" need to replace one
+tail(y[,1], 20) # last specimen is labelled NBCLAB2436, will rename duplicate 2437
+y[40,1] <- "NBCLAB2437" # replacing duplicate w new name
+summary(duplicated(y[,1])) # double checking
+y[,1] # last 8 row names don't have 10 characters: "L0235" "L0234" "C0910" "GMI-4" "P0041" "R14018" "R6750" "R7129"
+y[471,1] <- "L023500000" # replacing w new names
+y[472,1] <- "L023400000"
+y[473,1] <- "C091000000"
+y[474,1] <- "GMI0400000"
+y[475,1] <- "P004100000"
+y[476,1] <- "R140180000"
+y[477,1] <- "R675000000"
+y[478,1] <- "R712900000"
+dat2phylip(y, outfile = "data.phy")
 ```
 
 
