@@ -103,7 +103,7 @@ sum(str_count(z[35,], "?")) # row count
 ```{r eval = FALSE}
 x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
 dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
-# after some experimenting, spaces in the base strings aren't necessary, but 10 character length names ar needed, dashes "-" are allowed, no differentiation between upper and lower case, any letters allowed (not just ATCG and other IUPAC code)
+# after some experimenting, spaces in the base strings aren't necessary, but 10 character length names are needed, dashes "-" are allowed, no differentiation between upper and lower case, only letters from bases or amino acids allowed (?, e.g acdefghiklmnprstvwyz)
 ```
 Adapted IUPAC code:  
 
@@ -118,9 +118,9 @@ Adapted IUPAC code:
 |Y (pyrimidine)|CT|
 |D (pyrimidine)|TC|
 |W (weak)|AT|
-|X (weak)|TA|
+|Z (weak)|TA|
 |S (strong)|CG|
-|O (strong)|GC|
+|V (strong)|GC|
 |M (amino)|AC|
 |N (amino)|CA|
 |K (keto)|GT|
@@ -129,7 +129,7 @@ Adapted IUPAC code:
 ```{r}
 y <- data # making a copy
 # changing each SNP base combination to a single letter code
-y[y=="?"] <- "-"
+# y[y=="?"] <- "-" # "?" also accepted by splitstree
 y[y=="A:A"] <- "A"
 y[y=="T:T"] <- "T"
 y[y=="C:C"] <- "C"
@@ -139,9 +139,9 @@ y[y=="G:A"] <- "I"
 y[y=="C:T"] <- "Y"
 y[y=="T:C"] <- "D"
 y[y=="A:T"] <- "W"
-y[y=="T:A"] <- "X"
+y[y=="T:A"] <- "Z"
 y[y=="C:G"] <- "S"
-y[y=="G:C"] <- "O"
+y[y=="G:C"] <- "V"
 y[y=="A:C"] <- "M"
 y[y=="C:A"] <- "N"
 y[y=="G:T"] <- "K"
@@ -171,7 +171,7 @@ y[475,1] <- "P004100000"
 y[476,1] <- "R140180000"
 y[477,1] <- "R675000000"
 y[478,1] <- "R712900000"
-dat2phylip(y, outfile = "data.phy")
+dat2phylip(y, outfile = "data.phy") # can be opened by splitstree when configured as proteins/amino acids
 ```
 
 
