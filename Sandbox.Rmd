@@ -7,6 +7,8 @@ output: html_document
 # Preamble 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+getwd()
+# setwd()
 ```
 
 ```{r eval = FALSE}
@@ -25,10 +27,10 @@ library(dplyr)
 ## Looking at the data
 ```{r eval = FALSE}
 data <- read.delim("Genotyping-007.010-01_copy2.txt")
-dim(data) #478 rows, 332 columns
-data[1,1:17] # SNP data in columns 16 to 333
+dim(data) #478 rows, 333 columns
+data[1,1:17] # SNP data in columns 17 to 333
 class(data[5,17]) # character
-count(data$island) #  how many samples from each island there are
+count(data$island.1) #  how many samples from each island there are (function not working anymore??)
 count(data[,206]) # how many of each base combination there are in a SNP column
 ```
 
@@ -147,52 +149,75 @@ y <- tidyr::unite(y, bases, -1, sep = "", remove = TRUE) # merging all the base 
 y[,1] <- gsub("NBC.LAB.", "NBCLAB", y[,1]) # replacing part of the name of the rowname column so there is no punctuation and the names are exactly 10 characters long for the phylip file to work
 
 dat2phylip(y, outfile = "test2.phy")
-# something wrong with the file, e.g. illegal characters or two of the same specimen
+# something wrong with the file when opened in splitstree, e.g. illegal characters or two of the same specimen
 summary(duplicated(y[,1])) # no. 40 row name is duplicated
-duplicated(y[,1], fromLast = FALSE)
-duplicated(y[,1], fromLast = TRUE) # no. 39 is duplicated w no. 40
-summary(duplicated(y)) # checking row 40 doesn't have the same code string as well
-y[39:40,1] # "NBCLAB2005" "NBCLAB2005" need to replace one
-tail(y[,1], 20) # last specimen is labelled NBCLAB2436, will rename duplicate 2437
-y[40,1] <- "NBCLAB2437" # replacing duplicate w new name
-summary(duplicated(y[,1])) # double checking
-y[,1] # last 8 row names don't have 10 characters: "L0235" "L0234" "C0910" "GMI-4" "P0041" "R14018" "R6750" "R7129"
-y[471,1] <- "L023500000" # replacing w new names
-y[472,1] <- "L023400000"
-y[473,1] <- "C091000000"
-y[474,1] <- "GMI0400000"
-y[475,1] <- "P004100000"
-y[476,1] <- "R140180000"
-y[477,1] <- "R675000000"
-y[478,1] <- "R712900000"
+# duplicated(y[,1], fromLast = FALSE)
+# duplicated(y[,1], fromLast = TRUE) # no. 39 is duplicated w no. 40
+# summary(duplicated(y)) # checking row 40 doesn't have the same code string as well
+# y[39:40,1] # "NBCLAB2005" "NBCLAB2005" need to replace one
+# tail(y[,1], 20) # last specimen is labelled NBCLAB2436, will rename duplicate 2437
+# y[40,1] <- "NBCLAB2437" # replacing duplicate w new name
+# summary(duplicated(y[,1])) # double checking
+# y[,1] # last 8 row names don't have 10 characters: "L0235" "L0234" "C0910" "GMI-4" "P0041" "R14018" "R6750" "R7129"
+# y[471,1] <- "L023500000" # replacing w new names
+# y[472,1] <- "L023400000"
+# y[473,1] <- "C091000000"
+# y[474,1] <- "GMI0400000"
+# y[475,1] <- "P004100000"
+# y[476,1] <- "R140180000"
+# y[477,1] <- "R675000000"
+# y[478,1] <- "R712900000"
 dat2phylip(y, outfile = "data.phy") # can be opened by splitstree when configured as proteins/amino acids
 ```
+
 Try writing directly to a .nex file since splitstree only reads the .phy file as protein:
-ape::write.nexus.data(x, file, format = "dna")
+```{r eval = FALSE}
+y2 <- as.matrix(y)
+ape::write.nexus.data(y2, "nextestfile.nex", format = "dna") #doesn't format correctly, try again later?
+```
+
 
 
 # Mantel test prep
 uses lat/long data, there are geospatial R packages that give exact distances on the globe between lat/long points which will be useful here 
 ```{r eval=FALSE}
-install.packages("ade4") # I think this can be used for the mantel test
+# install.packages("ade4") # I think this can be used for the mantel test
 # install.packages("geosphere") # calculates distances between 2 points on a sphere
 library(ade4)
 library(geosphere)
 
+# "need to generate two distance matrices: one containing spatial distances and one containing distances between measured outcomes at the given points.  In the spatial distance matrix, entries for pairs of points that are close together are lower than for pairs of points that are far apart.  In the measured outcome matrix, entries for pairs of locations with similar outcomes are lower than for pairs of points with dissimilar outcomes.  We do this using the dist function.  The Mantel test function will require objects of this “distance” class"
+# distHaversine() # assumes earth is a sphere
+# distm() # makes distance matrix
+# distGeo() # assumes earth is elliptical ish, can choose specific model
+
 df <- data # make sure rows are samples and columns are variables
 #longitude and latitude 
 names(df) # need "geo_lat" "geo_long" 
+df <- df[,c(1,11,12)]
+names(df)
+longlat <- as.matrix(df[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+distGeo(longlat[c(1,12),]) # gives distance between the two rows
 
-# "need to generate two distance matrices: one containing spatial distances and one containing distances between measured outcomes at the given points.  In the spatial distance matrix, entries for pairs of points that are close together are lower than for pairs of points that are far apart.  In the measured outcome matrix, entries for pairs of locations with similar outcomes are lower than for pairs of points with dissimilar outcomes.  We do this using the dist function.  The Mantel test function will require objects of this “distance” class"
-distHaversine() # assumes earth is a sphere
-distm() # makes distance matrix
-distGeo() # assumes earth is elliptical ish, can choose specific model
-geo.dist <- distGeo(cbind(df$geo_long, df$geo_lat)) # do I only need 1 of each location of 1 for every specimen?
-geo.dist <- as.matrix(geo.dist)
-# sp.dist <- distGeo(df$meandist)
-# as.matrix(sp.dist)[1:5, 1:5]
+geo.dist <- distm(longlat, fun = distGeo)
 
-mantel.rtest(sp.dist, geo.dist, nrepet = 9999) # mantel test
+
+
+# genetic distances
+getwd()
+gen.dist <- read.delim("geneticdist.txt", sep = "\t", header = FALSE)
+# ncol(gen.dist) #478
+# gen.dist <- read.delim("geneticdist.txt", sep = "\t", col.names = paste0("V", seq_len(478)))
+gen.dist <- as.matrix(gen.dist)
+class(geo.dist)
+class(gen.dist)
+
+#change matrix to distance matrix in R for mantel test
+# col names and row names
+
+
+# Mantel test
+mantel.rtest(gen.dist, geo.dist)
 
 ```
-for later: HKY85 model for distances model
+
