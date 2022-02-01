@@ -1,0 +1,102 @@
+---
+title: "Mantel_test"
+author: "Grace Saville"
+date: "01/02/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r pressure, echo=FALSE}
+# Mantel test prep
+uses lat/long data, there are geospatial R packages that give exact distances on the globe between lat/long points which will be useful here 
+```{r eval=FALSE}
+# install.packages("ade4") # I think this can be used for the mantel test
+# install.packages("geosphere") # calculates distances between 2 points on a sphere
+library(ade4)
+library(geosphere)
+
+# "need to generate two distance matrices: one containing spatial distances and one containing distances between measured outcomes at the given points.  In the spatial distance matrix, entries for pairs of points that are close together are lower than for pairs of points that are far apart.  In the measured outcome matrix, entries for pairs of locations with similar outcomes are lower than for pairs of points with dissimilar outcomes.  We do this using the dist function.  The Mantel test function will require objects of this “distance” class"
+# distHaversine() # assumes earth is a sphere
+# distm() # makes distance matrix
+# distGeo() # assumes earth is elliptical ish, can choose specific model
+
+df <- data # make sure rows are samples and columns are variables
+#longitude and latitude 
+names(df) # need "geo_lat" "geo_long" 
+df <- df[,c(1,11,12)]
+names(df)
+longlat <- as.matrix(df[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+distGeo(longlat[c(1,12),]) # gives distance between the two rows
+
+geo.dist <- distm(longlat, fun = distGeo)
+dim(geo.dist) # 478 478
+
+
+# genetic distances
+getwd()
+gen.dist <- read.delim("geneticdist.txt", sep = "\t", header = FALSE)
+# ncol(gen.dist) #478
+# gen.dist <- read.delim("geneticdist.txt", sep = "\t", col.names = paste0("V", seq_len(478)))
+gen.dist <- as.matrix(gen.dist)
+dim(gen.dist) # 114482    478 (needed to remove an extra text section from the matrix file in notepad)
+
+
+#change matrix to distance matrix in R for mantel test
+# col names and row names
+
+# making a dummy matrix to test the function as.dist()
+test <- matrix(data = c(0,3,6,9,4,
+                        3,0,9,8,2,
+                        6,9,0,4,2,
+                        9,8,4,0,4,
+                        4,2,2,4,0), nrow = 5, ncol = 5)
+test <- as.dist(test, 
+        diag = TRUE, #include diagonal zeros
+        upper = TRUE) #include upper triangle
+test #works as expected, need to see why the function works strangely on my dataset
+
+# subsetting one of my matrices
+a <- gen.dist[1:5,1:5]
+a
+a2 <- as.dist(a, diag = TRUE, upper = TRUE)
+a2
+
+
+gen.dist <- as.dist(gen.dist, diag = TRUE, upper = TRUE)
+gen.dist[1:5]
+geo.dist <- as.dist(geo.dist, diag = TRUE, upper = TRUE)
+geo.dist[20:30]
+
+# Mantel test
+mantel.rtest(gen.dist, geo.dist)
+# Monte-Carlo test
+# Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)
+
+# Observation: 0.2807331 # genetic distance and geographic distance positively correlated
+
+# Based on 99 replicates
+# Simulated p-value: 0.01 
+# Alternative hypothesis: greater 
+#       Std.Obs   Expectation      Variance 
+# 26.5367570885 -0.0002961658  0.0001121521
+
+# Plots
+
+x <- data.frame(as.vector(gen.dist), as.vector(geo.dist))
+colnames(x) <- c("Genetic_Distance", "Geographic_Distance")
+
+library(ggplot2)
+ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05,0.95)) # linear smooth regression line and 5/95 quantile lines added
+
+```
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+

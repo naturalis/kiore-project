@@ -1,0 +1,68 @@
+---
+title: "Heterozygosity_test"
+author: "Grace Saville"
+date: "01/02/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Heterozygosity experimenting
+```{r eval = FALSE}
+x <- c("A:A", "G:T", "C:C", "A:T", "T:A","T:T", "A:C", "C:A") # test vector
+hetz <- c("A:G", "G:A", "C:T", "T:C", "A:T", "T:A", "C:G", "G:C", "A:C", "C:A", "G:T", "T:G") # vector of heterozygous combinations
+homz <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
+
+# testing to see if I can identify what values are homozygous and heterozygous within an example vector
+for (i in x){
+  if (i %in% hetz){print("E")}
+  else {print("O")}
+}
+
+# testing if I can replace the values in the above example vector 
+for (i in 1:length(x)){
+  if (x[i] %in% hetz){x[i] <- "E"}
+  else {x[i] <- "O"}
+}
+
+# trying another method for the subset dataframe:
+for (i in 1:nrow(sub)){
+  sub[i,][sub[i,] %in% hetz] <- "E"
+  sub[i,][sub[i,] %in% homz] <- "O"
+}
+
+# applying above for loop to entire df
+z <- data # making a copy of the data
+for (i in 1:nrow(z)){
+  z[i,][z[i,] %in% hetz] <- "E"
+  z[i,][z[i,] %in% homz] <- "O"
+}
+
+count(z[,105]) #column count
+sum(str_count(z[35,], "E")) # row count
+
+# could also try 0 for homo and 1 for hetero, therefore the lower the totals the lower the heterozygousity, however the number of NA's could interfere with the totals
+z2 <- data # making a copy of the data
+for (i in 1:nrow(z2)){
+  z2[i,][z2[i,] %in% hetz] <- 1
+  z2[i,][z2[i,] %in% homz] <- 0
+}
+
+z2[z2=="?"] <- NA # replacing ? with NA's 
+for (i in 16:332) {class(z2[,i]) <- "numeric"} # changed the class to numeric for each column so the totals can be computed (wouldn't work without for loop for some reason?)
+
+z2 <- rowwise(z2) # making the df rowwise so i can make calculations by row easier
+names(z2)
+z2 <- mutate(z2, total = sum(c_across(X11_CHR1_101004452:X154_CHR9_95290356), na.rm = TRUE))
+z2[,333]
+
+# trying this method of adding row totals at the end to the E/O df
+z <- rowwise(z)
+summarise(z)
+mutate(z, Etotal = sum(str_count(z, "E")))
+sum(str_count(z[35,], "?")) # row count
+
+```
+

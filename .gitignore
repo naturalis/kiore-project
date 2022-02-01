@@ -2,3 +2,10 @@
 .Rhistory
 .RData
 .Ruserdata
+scripts/*.Rproj
+scripts/*.Rhistory
+scripts/*.RData
+scripts/*.Ruserdata
+data/*.Rhistory
+data/*.RData
+data/*.Ruserdata
