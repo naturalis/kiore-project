@@ -1,0 +1,113 @@
+---
+title: "Data_cleanup"
+author: "Grace Saville"
+date: "11/02/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Preamble 
+
+```{r libraries, eval = FALSE}
+library(plyr)
+getwd()
+setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+```
+
+## Loading the data
+
+```{r loading data, eval = FALSE}
+data <- read.delim("./data/Genotyping-007.010-01_SNP_Raw_data.tsv")
+dim(data) #478 rows (specimens), 333 columns (SNP loci)
+data[1,1:17] # SNP data in columns 17 to 333
+```
+
+```{r data check, eval = FALSE}
+class(data[5,17]) # character
+count(data$island.1) #  how many samples from each island there are
+data[data$island.1 == "",] # checking why 2 "island.1" cells are blank
+data[c(471,473),1:10] # the blanks are from Laos and Cambodia, therefore replacing the blanks with "Mainland"
+data[471,"island.1"] <- "Mainland"
+data[473,"island.1"] <- "Mainland"
+```
+
+### Specimens per Island before data clean-up
+
+|Island|freq|
+|:----:|:----:|
+|Aotea (Great Barrier I)|10|
+|Borneo|25|
+|Doubtful Sound|1|
+|Great Mercury Island|1|
+|Halmahera|25|
+|Hatutaa|21|
+|Honuea|21|
+|Kaikura Island|20|
+|Kamaka|21|
+|Kayangel|21|
+|Late Island|21|
+|Luzon|1|
+|Mainland|5|
+|Malenge|25|
+|Mohotani|14|
+|Motukawanui|21|
+|New Britain|26|
+|New Guinea|25|
+|Normanby Island|25|
+|Rakiura (Stewart Isl)|21|
+|Reiono|21|
+|Rimatuu (Tetiaroa)|21|
+|Slipper Island|21|
+|Sulawesi|25|
+|Tahanea|20|
+|Wake Island|20|
+
+
+## Removing SNP columns with no variation (invariant/monomorphic)
+
+- Shoud I do this first or last?
+
+```{r invariant removal, eval = FALSE}
+x <- data # keeping "data" as backup original
+count(data[,20]) # how many of each base combination there are in a SNP column
+length(unique(data[,20])) # how many unique values there are in the column
+
+ncol(data) #333
+monocols <- integer() # empty vector for the for loop
+for (i in 17:333) {
+  z <- length(unique(data[,i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
+    if (z <= 3) 
+      {monocols <- append(monocols, i) # if z is as so, add the column number to the vector
+    }
+  rm(z)
+}
+
+monocols #17  73  80  88  98 102 108 129 139 154 156 176 177 178 179 203 208 209 243 252 253 265 271 276 324 331
+for (i in monocols) {
+  print(count(data[,i]))
+}
+# none with only 1 unique SNP in each column ...?
+```
+
+## Removing columns (SNPs) with few samples
+
+```{r removing sparse columns, eval = FALSE}
+count(data[,20]) # how many of each base combination there are in a SNP column
+length(unique(data[,20])) # how many unique values there are in the column
+```
+
+
+To do:
+
+- cleanup: remove invariant/monomorphic columns
+- cleanup: remove SNPs/columns with few samples (which cutoff? 60%)
+- cleanup: remove rows with >53% missing (so whole table becomes ~90% complete)
+- cleanup: remove SNPs not in HW equilibrium
+- cleanup: remove samples that are weird in the structure analysis
+- re-run NeighborNet and Mantel test
+- aggregate samples at island level, calculate island-to-island Fst and/or Nei distance
+- calculate heterozygosity, should decrease with distance, possibly be shaped by island size
+- PCA on the SNPs
