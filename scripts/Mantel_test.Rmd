@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 
-```{r pressure, echo=FALSE}
+```{r eval = FALSE}
 # Mantel test prep
 uses lat/long data, there are geospatial R packages that give exact distances on the globe between lat/long points which will be useful here 
 ```{r eval=FALSE}
@@ -20,17 +20,20 @@ uses lat/long data, there are geospatial R packages that give exact distances on
 library(ade4)
 library(geosphere)
 
-# "need to generate two distance matrices: one containing spatial distances and one containing distances between measured outcomes at the given points.  In the spatial distance matrix, entries for pairs of points that are close together are lower than for pairs of points that are far apart.  In the measured outcome matrix, entries for pairs of locations with similar outcomes are lower than for pairs of points with dissimilar outcomes.  We do this using the dist function.  The Mantel test function will require objects of this “distance” class"
+
+
+df <- data # make sure rows are samples and columns are variables
+
+#longitude and latitude 
+names(df) # need "geo_lat" "geo_long" 
+df <- df[,c(1,11,12)]
+names(df) # checking correct columns are used
+longlat <- as.matrix(df[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+
 # distHaversine() # assumes earth is a sphere
 # distm() # makes distance matrix
 # distGeo() # assumes earth is elliptical ish, can choose specific model
 
-df <- data # make sure rows are samples and columns are variables
-#longitude and latitude 
-names(df) # need "geo_lat" "geo_long" 
-df <- df[,c(1,11,12)]
-names(df)
-longlat <- as.matrix(df[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
 distGeo(longlat[c(1,12),]) # gives distance between the two rows
 
 geo.dist <- distm(longlat, fun = distGeo)
@@ -39,7 +42,7 @@ dim(geo.dist) # 478 478
 
 # genetic distances
 getwd()
-gen.dist <- read.delim("geneticdist.txt", sep = "\t", header = FALSE)
+gen.dist <- read.delim("geneticdist_splitstree_output.txt", sep = "\t", header = FALSE)
 # ncol(gen.dist) #478
 # gen.dist <- read.delim("geneticdist.txt", sep = "\t", col.names = paste0("V", seq_len(478)))
 gen.dist <- as.matrix(gen.dist)
@@ -73,17 +76,30 @@ geo.dist <- as.dist(geo.dist, diag = TRUE, upper = TRUE)
 geo.dist[20:30]
 
 # Mantel test
-mantel.rtest(gen.dist, geo.dist)
+mantel.rtest(gen.dist, geo.dist, nrepet = 99)
 # Monte-Carlo test
 # Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)
 
 # Observation: 0.2807331 # genetic distance and geographic distance positively correlated
 
 # Based on 99 replicates
-# Simulated p-value: 0.01 
+# Simulated p-value: 0.01 # less than 0.05 therefore could reject null hyp. (no correlation), althugh this p-value is simulated (?)
 # Alternative hypothesis: greater 
 #       Std.Obs   Expectation      Variance 
 # 26.5367570885 -0.0002961658  0.0001121521
+
+mantel.rtest(gen.dist, geo.dist, nrepet = 9999)
+# Monte-Carlo test
+# Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)
+
+# Observation: 0.2807331 
+
+# Based on 9999 replicates
+# Simulated p-value: 1e-04 
+# Alternative hypothesis: greater 
+
+#      Std.Obs  Expectation     Variance 
+# 2.467675e+01 9.465528e-05 1.293357e-04 
 
 # Plots
 
@@ -95,8 +111,5 @@ ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_poin
 
 ```
 
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 
