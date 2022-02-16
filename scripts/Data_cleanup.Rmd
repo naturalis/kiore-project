@@ -32,7 +32,25 @@ data[data$island.1 == "",] # checking why 2 "island.1" cells are blank
 data[c(471,473),1:10] # the blanks are from Laos and Cambodia, therefore replacing the blanks with "Mainland"
 data[471,"island.1"] <- "Mainland"
 data[473,"island.1"] <- "Mainland"
+
+x <- data # keeping "data" as backup original
 ```
+
+## Tidying SNP order
+
+I'm doing this to make R evaluation easier (e.g when checking for counts it does not count A:G and G:A separately)
+```{r SNP arrangement, eval = FALSE}
+dim(x)
+count(unlist(x[17:298]))
+x[x == "T:A"] <- "A:T"
+x[x == "C:A"] <- "A:C"
+x[x == "G:A"] <- "A:G" 
+x[x == "T:C"] <- "C:T"
+x[x == "G:C"] <- "C:G"
+x[x == "G:T"] <- "T:G"
+count(unlist(x[17:298]))
+```
+
 
 ### Specimens per Island before data clean-up
 
@@ -71,14 +89,13 @@ data[473,"island.1"] <- "Mainland"
 - Shoud I do this first or last?
 
 ```{r invariant removal, eval = FALSE}
-x <- data # keeping "data" as backup original
-count(data[,20]) # how many of each base combination there are in a SNP column
-length(unique(data[,20])) # how many unique values there are in the column
+count(x[,20]) # how many of each base combination there are in a SNP column
+length(unique(x[,20])) # how many unique values there are in the column
 
-ncol(data) #333
+ncol(x) #333
 monocols <- integer() # empty vector for the for loop
-for (i in 17:333) {
-  z <- length(unique(data[,i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
+for (i in 17:298) {
+  z <- length(unique(x[,i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
     if (z <= 3) 
       {monocols <- append(monocols, i) # if z is as so, add the column number to the vector
     }
@@ -87,27 +104,91 @@ for (i in 17:333) {
 
 monocols #17  73  80  88  98 102 108 129 139 154 156 176 177 178 179 203 208 209 243 252 253 265 271 276 324 331
 for (i in monocols) {
-  print(count(data[,i]))
+  print(count(x[,i]))
 }
 # none with only 1 unique SNP in each column ...?
+
+# x <- x[,-c(monocols)]
 ```
 
 ## Removing columns (SNPs) with few samples
 
 ```{r removing sparse columns, eval = FALSE}
-count(data[,20]) # how many of each base combination there are in a SNP column
-length(unique(data[,20])) # how many unique values there are in the column
+count(x[,34]) # how many of each base combination there are in a SNP column
+count(grepl("?", x[,33], fixed = TRUE))
+
+
+ncol(x) #333
+percblank <- integer() # empty df for the for loop
+for (i in 17:333) {
+  y <- count(grepl("?", x[,i], fixed = TRUE)) # finds and counts freq of ?
+  z <- signif((nrow(x)- y[1,2])/nrow(x)*100, 4) # percentage of ? in the column, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no ?s and result in errors.
+    if (z > 60) 
+      {percblank <- append(percblank, i) # if z (% of ?) is as so, add the column number to the vector
+    }
+  rm(z)
+  rm(y)
+}
+
+percblank # 17  18  19  25  48  65  69  73  80  88  89  96 102 108 131 133 146 147 156 159 162 165 179 185 205 208 212 228 241 258 264 265 271 304 330
+# checking:
+count(x[,271])
+444/478
+
+x <- x[,-c(percblank)]
+ncol(x) #298
 ```
 
+## Removing rows (specimens) with few samples
+
+```{r removing sparse rows, eval = FALSE}
+x2 <- data.table::transpose(x) # transposing the df temporarily since count() doesn't work well on rows
+count(x2[17:298,1]) # how many of each base combination there are in a specimen row
+count(grepl("?", x2[,50], fixed = TRUE))
+
+ncol(x2) #478 specimens
+percblank <- integer() # empty df for the for loop
+for (i in 1:478) {
+  y <- count(grepl("?", x2[,i], fixed = TRUE)) # finds and counts freq of "?"
+  z <- signif((nrow(x2)- y[1,2])/nrow(x2)*100, 4) # percentage of "?" in the specimen, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no ?s and result in errors.
+    if (z > 55) 
+      {percblank <- append(percblank, i) # if z (% of "?") is as so, add the column number to the vector
+    }
+  rm(z)
+  rm(y)
+}
+
+percblank # 1   7   9  10  11  18  25  48  49  50  51  52  53  55  56  57  58  59  60  62  63  65  66  71  79 80  87  88  89  90  91  92  93  95  96  97 101 102 103 104 105 106 108 109 110 111 112 113 114 115 117 118 119 120 121 122 123 124 125 128 129 131 133 134 135 136 137 139 141 142 143 144 145 146 150 151 152 153 154 155 156 157 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 335
+# checking work:
+count(x2[17:298,171])
+185/298
+
+x <- x[-c(percblank),] # removing the rows listed (percblank) that have too many "?" from the df
+nrow(x) #377
+
+# checking the % of all ? in the df:
+z <- count(grepl("?", unlist(x), fixed = TRUE))
+signif(z[2,2]/(z[1,2]+z[2,2])*100, 4) # 9.481% "?", therefore 90.52% complete df
+```
+
+Should I make a df of the % missing data?
+Do I need to make my numbers the same as Klaas'?
+Am I checking for monomorphism correctly?
 
 To do:
 
-- cleanup: remove invariant/monomorphic columns
-- cleanup: remove SNPs/columns with few samples (which cutoff? 60%)
-- cleanup: remove rows with >53% missing (so whole table becomes ~90% complete)
+- [done?] cleanup: remove invariant/monomorphic columns
+- [done] cleanup: remove SNPs/columns with few samples (which cutoff? 60%)
+- [done] cleanup: remove rows with >53% missing (so whole table becomes ~90% complete)
 - cleanup: remove SNPs not in HW equilibrium
 - cleanup: remove samples that are weird in the structure analysis
 - re-run NeighborNet and Mantel test
 - aggregate samples at island level, calculate island-to-island Fst and/or Nei distance
 - calculate heterozygosity, should decrease with distance, possibly be shaped by island size
 - PCA on the SNPs
+
+
+```{r}
+library(HardyWeinberg)
+HWExactStats(x)
+```
