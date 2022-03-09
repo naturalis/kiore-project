@@ -71,9 +71,8 @@ a2
 
 
 gen.dist <- as.dist(gen.dist, diag = TRUE, upper = TRUE)
-gen.dist[1:5]
 geo.dist <- as.dist(geo.dist, diag = TRUE, upper = TRUE)
-geo.dist[20:30]
+
 
 # Mantel test
 mantel.rtest(gen.dist, geo.dist, nrepet = 99)

@@ -30,13 +30,7 @@ setwd("./data")
 data <- read.delim("Genotyping-007.010-01_SNP_Raw_data.tsv")
 ```
 
-```{r}
-dim(data) #478 rows, 333 columns
-data[1,1:17] # SNP data in columns 17 to 333
-class(data[5,17]) # character
-count(data$island.1) #  how many samples from each island there are (function not working anymore??)
-count(data[,206]) # how many of each base combination there are in a SNP column
-```
+
 
 ## Making a subset
 ```{r eval = FALSE}
