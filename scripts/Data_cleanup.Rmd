@@ -94,9 +94,6 @@ count(data$island.1)
 - Should I do this first or last?
 
 ```{r invariant removal, eval = FALSE}
-# count(x[,20]) # how many of each base combination there are in a SNP column
-# length(unique(x[,20])) # how many unique values there are in the column
-
 ncol(x) #333
 monocols <- integer() # empty vector for the for loop
 for (i in 17:333) {
@@ -105,15 +102,18 @@ for (i in 17:333) {
       {monocols <- append(monocols, i) # if z is as so, add the column number to the vector
     }
   rm(z)
-}
+} 
+# tried with z <= 2 but no result, therefore tried z <= 3 and checked the results manually below.
 
 monocols # 17  34  73  80  88  95  98 101 102 108 119 129 139 154 156 171 176 177 178 179 194 203 207 208 209 227 237 239 243 251 252 253 265 271 276 324 331
 for (i in monocols) {
   print(count(x[,i]))
 }
 # none with only 1 unique SNP in each column ...? It's possible since the SNP loci were selected for their differences, but double check this 
+```
 
-# x <- x[,-c(monocols)]
+```{r column deletion, eval = FALSE}
+# x <- x[,-c(monocols)] # for removal of monomorphic columns
 
 rm(i, monocols)
 ```
@@ -121,10 +121,6 @@ rm(i, monocols)
 ## Removing columns (SNPs) with few samples
 
 ```{r removing sparse columns, eval = FALSE}
-# count(x[,34]) # how many of each base combination there are in a SNP column
-# count(grepl("?", x[,33], fixed = TRUE)) # True means "?"
-
-
 ncol(x) #333
 percblank <- integer() # empty df for the for loop
 for (i in 17:333) {
@@ -139,10 +135,12 @@ for (i in 17:333) {
 
 percblank # 17  18  19  25  48  65  69  73  80  88  89  96 102 108 131 133 146 147 156 159 162 165 179 185 205 208 212 228 241 258 264 265 271 304 330
 # checking:
-# count(x[,271])
-# 444/478
+# count(x[,212])
+# 320/478
+```
 
-x <- x[,-c(percblank)]
+```{r column delction, eval = FALSE}
+x <- x[,-c(percblank)] # removing columns listed above, with more than 60% missing data
 ncol(x) #298
 
 rm(i, percblank)
@@ -152,8 +150,6 @@ rm(i, percblank)
 
 ```{r removing sparse rows, eval = FALSE}
 x2 <- data.table::transpose(x) # transposing the df temporarily since count() doesn't work well on rows
-# count(x2[17:298,1]) # how many of each base combination there are in a specimen row
-# count(grepl("?", x2[,50], fixed = TRUE)) # True means "?" number
 
 ncol(x2) #478 specimens
 percblank <- integer() # empty df for the for loop
@@ -171,29 +167,36 @@ percblank # 1   7   9  10  11  18  25  48  49  50  51  52  53  55  56  57  58  5
 # checking work:
 # count(x2[17:298,171])
 # 185/298
+```
 
+```{r row deletion, eval = FALSE}
 x <- x[-c(percblank),] # removing the rows listed (percblank) that have too many "?" from the df
-nrow(x) #377
+nrow(x) #379
+```
 
-# checking the % of all ? in the df:
+```{r check and save, eval = FALSE}
+# checking the % of all "?"s in the df:
 z <- count(grepl("?", unlist(x), fixed = TRUE))
 signif(z[2,2]/(z[1,2]+z[2,2])*100, 4) # 9.723% "?"
 100 - 9.723 # 90.277% complete df, ideal point where there is more than 90% completeness but not too many rows and columns removed (yet)
 
 rm(i, percblank, x2, z)
 getwd()
-save(list=ls(all=TRUE), file="Data_cleanup.RData") # save RDATA for later use
+save(list=ls(all=TRUE), file=".RData") # save RDATA for later use if necessary
+write.csv(x, "./data/ratsSNPs_halfclean.csv", row.names = FALSE)
 ```
+
 
 ## Prepping df for HWE Analysis
 
 I would like to remove the SNPs not in Hardy-Weinberg equilibrium, therefore I need to reformat the data for input into HWE function.
 
-```{r}
-load("Data_cleanup.RData") # if necessary
+```{r eval = FALSE}
+load(".RData") # if necessary
+x <- read.csv("./data/ratsSNPs_halfclean.csv")
 ```
 
-```{r data prep, eval = FALSE}
+```{r SNP column separation, eval = FALSE}
 x2 <- x # making a copy
 x2[1,1:20] # checking column names
 x2 <- x2[,-c(2:16)] # removing all but specimen names and SNPs
@@ -211,9 +214,9 @@ for (i in 2:283) {
 }
 
 # Checking:
-dim(x3) # 379 rows 565 columns
-x2[1:5,1:5] 
-x3[1:5,1:5] # comparing the 2 dfs to check the column naming worked correctly
+# dim(x3) # 379 rows 565 columns
+# x2[1:5,1:5] 
+# x3[1:5,1:5] # comparing the 2 dfs to check the column naming worked correctly
 
 x2 <- x3
 rm(x3, coln) # removing excess objects
@@ -221,7 +224,7 @@ rm(x3, coln) # removing excess objects
 
 The following chunk is for for producing the file necessary for PGDSpider program:
 
-```{r data prep 2, eval = FALSE}
+```{r file prep, eval = FALSE}
 x2 <- x2[order(x2$island, decreasing = FALSE),] # ordering df alphabetically by island
 print(as.matrix(x2[,1])) # printing the island names and row numbers 
 
@@ -283,62 +286,33 @@ t <- as.data.frame(x2[252:272,]) # Reiono
 u <- as.data.frame(x2[273:293,]) # Rimatuu 
 v <- as.data.frame(x2[294:314,]) # Slipper_Island
 w <- as.data.frame(x2[316:337,]) #  Sulawesi 
-# x
+# x already in use
 y <- as.data.frame(x2[338:357,]) # Tahanea
 z <- as.data.frame(x2[360:379,]) # Wake_Island
 
 pops <- as.character(c(letters[seq(from = 1, to = 23)], "y", "z")) # list of popn object names
+```
 
-# x3 <- list("title", "npops = 25", "nloci = 282") # creating list of values to be exported
-# for (ii in 1:25) {
-#  x3 <- rlist::list.append(x3, popnames[ii])
-#  x3 <- rlist::list.append(x3, get(pops[ii]))
-#  rm(ii)
-} # appending the popn names and dfs to the list
-
-
-# Saving the list to file
+```{r writing to file, eval = FALSE}
+ncol(x2) #565
 getwd()
-# sink("ratsSNPs_PGDSpyder_input.csv") # create empty file
+# sink("./data/new_ratsSNPs_PGDSpyder_input.csv") # create empty file
 
-ncol(x2)
-
-sink("test.txt")
+sink("./data/test.txt")
 cat("rats_SNPS", "npops = 25", "nloci = 282", fill = 1)
 cat(colnames(x2[-1]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names
-cat(popnames[1], fill = 1)
-for (i1 in 1:length(pops)) { # outer loop
-  i1 <- pops[i1]
-  for (i2 in 1:nrow(i1)) { # inner loop
-    print(cat(as.character(i1[i2,]), fill = FALSE, sep = "\t"))
-  } # inner loop close
-} # outer loop close
-sink()
-
-
-
 for (i1 in 1:25) { # outer loop
-  print(cat(popnames[i1], fill = 1)
-  foo <- 
-  for (i2 in 1:length(i1) { # inner loop
-    print(cat(as.character(i1[i2,]), fill = FALSE, sep = "\t") # Aotea
+  print(cat(popnames[i1], fill = 1)) # island name
+  foo <- get(pops[i1]) # calling the island object based on the pops vector
+  for (i2 in 1:nrow(foo)) { # inner loop
+    print(cat(as.character(foo[i2,]), fill = FALSE, sep = "\t")) # printing the SNP rows
   } # inner loop close
 } # outer loop close
+sink() # closing the sink connection (do not forget!)
 
+rm(i1, i2, foo, letters[seq(from = 1, to = 23)], y, z)
 
-
-
-
-
-length(x3)
-for (ii in 1:3) {
-  cat(x2[[11]], fill = TRUE)
-} # printing in console the text to send to the file
-sink() # closing the sink connection to the file 
-
-rm(ii, letters[seq(from = 1, to = 23)], y, z)
-
-# write.csv(x3, "ratsSNPs_PGDSpyder_input.csv", row.names = FALSE)
+# write.csv(x2, "ratsSNPs_PGDSpyder_input.csv", row.names = FALSE)
 ```
 
 The CONVERT format is defined as follows:
@@ -378,7 +352,7 @@ INFO  19:19:51 - translation completed
 
 why are there two of each row in the files from PGD Spider? Should I select DNA instead of SNP?
 
-arlequin: made general setting missing level per site 0.25
+arlequin: made general setting missing level per site 0.25 -> maybe change to 0.4?
 
 ## HWE Analysis and removal
 
