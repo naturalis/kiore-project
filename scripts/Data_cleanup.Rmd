@@ -382,31 +382,6 @@ arlequin: made general setting missing level per site 0.25
 
 ## HWE Analysis and removal
 
-Experimenting with the Arlequin results output in R
-```{r eval = FALSE}
-trythis <- read.delim("trythis.txt")
-head(trythis)
-tail(trythis)
-colnames(trythis) # "Locus...Genot.......Obs.Het......Exp.Het....P.value.....s.d...Steps.done"
-
-m <- as.vector(grep("This locus is monomorphic", trythis[,1], value = FALSE, fixed = TRUE)) # making list of rows that only say these words
-trythis <- as.data.frame(trythis[-c(1,m),]) # removing the rows listed above, plus the dashed line
-```
-
-```{r eval = FALSE}
-# Re-run this chunk until there is only 1 space between the values:
-trythis <- as.data.frame(gsub("  ", " ", trythis[,1], fixed = TRUE)) # removing many spaces
-head(trythis)
-```
-
-```{r eval = FALSE}
-colnames(trythis) <- "Var1" # "Locus Genot Obs.Het Exp.Het P.value s.d Steps.done"
-trythis <- tidyr::separate(trythis, sep = " ", col = Var1, into = c("foo", "Locus", "Genot", "Obs.Het", "Exp.Het", "P.value", "s.d", "Steps.done")) # splitting column into multiple (with a extra column because of the space at the start of the string)
-trythis <- trythis[,-1] # removing extra row
-for (i in 1:ncol(trythis)) {trythis[,i] <- as.numeric(trythis[,i])} # converting to numeric rather than character/factor
-write.table(trythis, "Borneotest.txt", row.names = FALSE, sep = "\t") # save to file
-```
-
 ### Creating loop for reading the HWE files
 ```{r}
 getwd()
@@ -430,16 +405,23 @@ for (i in 1:length(filenames)) {
   write.table(df, paste("clean", filenames[i], sep = "_"), row.names = FALSE, sep = "\t") # save to file
 }
 
-rm(i, ii, m, df)
+rm(i, ii, m, df, filenames)
 ```
-
 
 
 ### Checking the HWE P-values
 
-```{r}
-lowPvalue <- as.vector(which(trythis$P.value <= 0.01))
-# trythis[c(lowPvalue),] # checking 
+```{r eval = FALSE}
+objectnames <- as.vector(ls()) # should be islands only, otherwise remove extras from vector
+objectnames
+
+for (i in 1:length(objectnames)) {
+  x <- get(objectnames[i])
+  print(objectnames[i])
+  print(which(x$P.value <= 0.01))
+}
+rm(x, i)
+
 ```
 
 
