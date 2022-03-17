@@ -20,35 +20,34 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 
 ## Dataset loading
 ```{r eval = FALSE}
-foo <- read.csv("./data/ratsSNPs_halfclean.csv") # loading the data table 
-colnames(foo)
-foo <- foo[,-c(2:16)] # removing unnecessary columns for this analysis
+data <- read.csv("./data/ratsSNPs_halfclean.csv") # loading the data table
+
+z <- data # making a copy of the data
+colnames(z)
+z <- z[,-c(2:16)] # removing unnecessary columns for this analysis
 ```
 
 ## Heterozygosity experimenting
-```{r eval = FALSE}
-dim(foo) # 379 rows 283 columns
-count(unlist(foo[,17:283])) # checking what SNP combinations are present
-het <- c("A:C", "A:G", "A:T", "C:G", "C:T", "T:G") # vector of heterozygous combinations
+```{r Setting up data, eval = FALSE}
+dim(z) # 379 rows 283 columns
+str(z)
+unique(unlist(z[,17:283])) # checking what SNP combinations are present
+# "?"   "A:A" "G:G" "A:G" "T:T" "A:T" "C:C" "C:T" "T:G" "C:G" "A:C"
+
+het <- c("A:G", "A:T", "C:T", "T:G", "C:G", "A:C") # vector of heterozygous combinations
 hom <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
 
-# Replacing specific 
-z <- foo # making a copy of the data
+# Replacing specific combos
 for (i in 1:nrow(z)){
   z[i,][z[i,] %in% het] <- "E" 
   z[i,][z[i,] %in% hom] <- "O"
 }
 
 str(z)
-
-# count(z[,105]) #column count
-sum(str_count(z[2,], "O")) # row count
-
-# 0 for homo and 1 for hetero, therefore the lower the totals the lower the heterozygousity, however the number of NA's could interfere with the totals
-
 z[z=="?"] <- NA # replacing ? with NA's 
-# for (i in 17:283) {class(z[,i]) <- "integer"} # changed the class to numeric for each column so the totals can be computed (wouldn't work without for loop for some reason, could try with apply())
+```
 
+```{r homozygous totals per specimen, eval = FALSE}
 o.freq <- vector()
 e.freq <- vector()
 na.freq <- vector()
@@ -62,16 +61,94 @@ for (i in 1:379) {
   rm(x)
 }
 
-df <- data.frame(foo$island, o.freq, e.freq, na.freq)
+df <- data.frame(z$island, o.freq, e.freq, na.freq) # making a df with the freq totals
+perc.o <- round(as.vector((df$o.freq / (df$o.freq + df$e.freq)) * 100), digits = 3) # percentage without incl missing
+df$perc.o <- perc.o
+perc.missing <- round(as.vector((df$na.freq / (df$o.freq + df$e.freq + df$na.freq)) * 100), digits = 3) # percentage of missing data in row/specimen
+df$perc.missing <- perc.missing
 
+str(df)
+```
 
-# str_count(z[2,2:283], pattern = "1")
+```{r homozygous total per island, eval = FALSE}
+data <- data[order(data$island, decreasing = FALSE),] # ordering df alphabetically by island
+unique(data$island)
+unique(data$island.1)
+colnames(data)
+data[,c(1,8)][data$island.1 == "Mainland"] # doesn't work
+sum(data$island.1 == "Mainland")
+shortpopnames <- as.character(c(
+  "aotea",
+  "borneo",
+  "cambodia",
+  "grtmercury",   
+  "halmaher",
+  "hatutaa",
+  "honuea",
+  "kaikura",        
+  "kamaka",
+  "kayangel",
+  "late",
+  "luzon",
+  "malenge",
+  "mohotani",
+  "motukawa",
+  "newbrita",          
+  "newguine",
+  "normanby",
+  "rakiura",
+  "reiono",                
+  "rimatuu",
+  "slipper",
+  "southland",
+  "sulawesi",               
+  "tahanea",
+  "thailand",
+  "wake")            
+)
 
-# z <- rowwise(z2) # making the df rowwise so I can make calculations by row easier
-# names(z)
-# z <- mutate(z, total = sum(c_across(X11_CHR1_101004452:X154_CHR9_95290356), na.rm = TRUE))
-# z[,333]
+# splitting the data df into df objects by island:
+for (i in 1:length(shortpopnames)) {
+  y <- as.vector(grep(shortpopnames[i], z[,1], ignore.case = TRUE, value = FALSE))
+  assign(paste(shortpopnames[i]), z[y,])
+}
+rm(y, i)
 
+# making a "mainland" df:
+mainland <- rbind(cambodia, luzon, thailand)
+rm(cambodia, luzon, thailand)
+shortpopnames
+shortpopnames <- shortpopnames[-c(3, 12, 26)]
+shortpopnames <- append(shortpopnames, "mainland")
+
+# double checking the dfs have the correct specimens per island:
+for (i in 1:25) {
+  print(shortpopnames[i])
+  y <- get(shortpopnames[i])
+  print(y[,1])
+}
+
+# counting values:
+sums <- data.frame()
+for (i in 1:length(shortpopnames)) {
+  o <- sum(grepl("O", unlist(get(shortpopnames[i])), fixed = TRUE)) # counting row O's
+  e <- sum(grepl("E", unlist(get(shortpopnames[i])), fixed = TRUE)) # counting row E's
+  na <- sum(is.na(get(shortpopnames[i]))) # counting row NA's
+  vec <- as.vector(c(shortpopnames[i], o, e, na))
+  sums <- rbind(sums, vec)
+}
+
+colnames(sums) <- c("island", "o.freq", "e.freq", "na.freq")
+str(sums)
+sums$o.freq <- as.integer(sums$o.freq)
+sums$e.freq <- as.integer(sums$e.freq)
+sums$na.freq <- as.integer(sums$na.freq)
+
+# calculating percentages:
+perc.o <- round(as.vector((sums$o.freq / (sums$o.freq + sums$e.freq)) * 100), digits = 3) # percentage without incl missing
+sums$perc.o <- perc.o
+perc.missing <- round(as.vector((sums$na.freq / (sums$o.freq + sums$e.freq + sums$na.freq)) * 100), digits = 3) # percentage of missing data in row/specimen
+sums$perc.missing <- perc.missing
 
 ```
 
