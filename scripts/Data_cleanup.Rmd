@@ -91,8 +91,6 @@ count(data$island.1)
 
 ## Removing SNP columns with no variation (invariant/monomorphic)
 
-- Should I do this first or last?
-
 ```{r invariant removal, eval = FALSE}
 ncol(x) #333
 monocols <- integer() # empty vector for the for loop
@@ -156,7 +154,7 @@ percblank <- integer() # empty df for the for loop
 for (i in 1:478) {
   y <- count(grepl("?", x2[,i], fixed = TRUE)) # finds and counts freq of "?"
   z <- signif((nrow(x2)- y[1,2])/nrow(x2)*100, 4) # percentage of "?" in the specimen, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no "?" and result in errors.
-    if (z > 56) 
+    if (z > 56) # 56% missing allowed because it gives 90% completeness (see below)
       {percblank <- append(percblank, i) # if z (% of "?") is as so, add the column number to the vector
     }
   rm(z)
@@ -296,70 +294,33 @@ pops <- as.character(c(letters[seq(from = 1, to = 23)], "y", "z")) # list of pop
 ```{r writing to file, eval = FALSE}
 ncol(x2) #565
 getwd()
-# sink("./data/new_ratsSNPs_PGDSpyder_input.csv") # create empty file
 
-sink("./data/test.txt")
+sink("./data/ratsSNPs_PGDSpyder_input.txt") # create empty file
 cat("rats_SNPS", "npops = 25", "nloci = 282", fill = 1)
-cat(colnames(x2[-1]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names
+cat("\t", fill = FALSE)
+cat(colnames(x2[,c(FALSE,TRUE)]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names (even columns only)
 for (i1 in 1:25) { # outer loop
-  print(cat(popnames[i1], fill = 1)) # island name
+  cat(popnames[i1], fill = 1) # island name
   foo <- get(pops[i1]) # calling the island object based on the pops vector
   for (i2 in 1:nrow(foo)) { # inner loop
-    print(cat(as.character(foo[i2,]), fill = FALSE, sep = "\t")) # printing the SNP rows
+    cat(as.character(foo[i2,]), "\n", fill = FALSE, sep = "\t") # printing the SNP rows
   } # inner loop close
 } # outer loop close
 sink() # closing the sink connection (do not forget!)
 
-rm(i1, i2, foo, letters[seq(from = 1, to = 23)], y, z)
-
-# write.csv(x2, "ratsSNPs_PGDSpyder_input.csv", row.names = FALSE)
+rm(i1, i2, foo, popnames, pops)
+rm(list = c(letters[seq(from = 1, to = 23)], "y", "z")) # removing excess objects
 ```
 
-The CONVERT format is defined as follows:
-• It is an EXCEL file saved as a tab delimited Text file (*.txt)
-• The first line (cell A1) contains a brief description of the data file (title)
-• The second line (cell A2) gives the number of populations present in the data file (e.g.: npops
-= 2)
-• The third line (cell A3) contains the number of loci (e.g.: nloci = 7)
-• fourth line: the names of the loci (in order, without spaces, underscores are allowed)
-• Each population starts with the line pop = pop_name. There must be at least one space
-between 'pop' and '='. Spaces within population name are not allowed, but an underscores
-can be used.
-• Each individual within a population begins with an individual name. It can be a number,
-characters like: '/', '=', '?', ':', ';' or ',' are not allowed and there must be no spaces within
-names.
-• After an individual’s name, the diploid genotypes are given:
-o on the same line or wrapped to the next line
-o alleles must be given in numeric form (two alleles for each locus)
-o alleles can be coded as any integer between 1 and 9999
-o Typically the numbers will indicate the size of the allele in base pairs (e.g., for
-microsats)
-o Missing data are coded as: '?
+- check which specimens will be in the mainland popn. (e.g. luzon, also Borneo and Sulawesi), and if populations w 1 specimen are viable (e.g. doubtful sound and great mercury isl.)
 
-
-
-
-
-
-check which specimens will be in the mainland popn. (e.g. luzon, also Borneo and Sulawesi), and if populations w 1 specimen are vialble (e.g. doubtful sound and great mercury isl.)
-
-Structure input file creation (PGD Spider)
-INFO  19:18:54 - Convert...
-INFO  19:19:50 - convert CONVERT:outputtest.txt to STRUCTURE:STRUCTUREinput
-WARN  19:19:50 - Data are converted to integers (A=1, T=2, G=3, C=4)!
-WARN  19:19:51 - Data in individual "Southland1" does not have the requested ploidy (diploid). Missing alleles will be coded as missing data!
-INFO  19:19:51 - translation completed
-
-why are there two of each row in the files from PGD Spider? Should I select DNA instead of SNP?
-
-arlequin: made general setting missing level per site 0.25 -> maybe change to 0.4?
 
 ## HWE Analysis and removal
 
 ### Creating loop for reading the HWE files
 ```{r}
 getwd()
-setwd("./results/arl_results/hwe_results_by_island")
+setwd("./results/arlequin_results/hwe_results_by_island_14032022")
 filenames <- as.vector(list.files())
 
 for (i in 1:length(filenames)) {
@@ -376,11 +337,20 @@ for (i in 1:length(filenames)) {
   df <- df[,-1] # removing extra row
   for (ii in 1:ncol(df)) {df[,ii] <- as.numeric(df[,ii])} # converting to numeric rather than character/factor
   assign(paste(filenames[i]), df) # renaming object
-  write.table(df, paste("clean", filenames[i], sep = "_"), row.names = FALSE, sep = "\t") # save to file
+  # write.table(df, paste("df", filenames[i], sep = "_"), row.names = FALSE, sep = "\t") # save to file
 }
 
 rm(i, ii, m, df, filenames)
 ```
+
+Reading the tables
+Locus:
+Genot:
+Obs.Het: Observed Heterozygosity
+Exp.Het: Expected Heterozygosity
+P.value:
+s.d:
+Steps.done:
 
 
 ### Checking the HWE P-values
@@ -388,31 +358,89 @@ rm(i, ii, m, df, filenames)
 ```{r eval = FALSE}
 objectnames <- as.vector(ls()) # should be islands only, otherwise remove extras from vector
 objectnames
+# If necessary:
+objectnames <- objectnames[-c(3, 27, 28)] # removing non-island objects
 
+# making df of all hwe results
+hwe.all <- data.frame()
 for (i in 1:length(objectnames)) {
-  x <- get(objectnames[i])
-  print(objectnames[i])
-  print(which(x$P.value <= 0.01))
+  foo <- get(objectnames[i])
+  islandpop <- c(rep(paste(objectnames[i]), paste(nrow(foo)))) # making a vector of the popn. name
+  foo$islandpop <- islandpop # adding the column to the results df to identify popn.
+  hwe.all <- rbind(hwe.all, foo) # adding the popn. df to the combined hwe results df
 }
-rm(x, i)
 
+rm(islandpop, foo, i)
+rm(list = objectnames) # removes all the island objects
+```
+
+Running a Holm's Sequential Bonferroni test to adjust p-values
+```{r eval = FALSE}
+nrow(hwe.all) # 2622
+
+p.value.adjusted <- c(p.adjust(hwe.all$P.value, method = "holm")) # do I not need to insert the threshold??
+hwe.all$p.value.adjusted <- p.value.adjusted
+
+rm(p.value.adjusted)
+```
+General holm's formula:
+target alpha level / no. of tests - rank no. of pair (by degree of signif.) + 1
+
+Examining significant hwe p-values
+```{r eval = FALSE}
+hwe.signif <- hwe.all[which(hwe.all$p.value.adjusted <= 0.05),]
+hwe.signif[,c(1,8,9)]
+count(hwe.signif$Locus) # 2 at locus 41 (Kaikura and Reiono), rest are singles
+count(hwe.signif$islandpop) # concerning that 17 of 23 are Kayangel
+```
+
+
+## Removing samples/loci with issues identified in HWE and Structure analyses
+```{r eval = FALSE}
+getwd()
+setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+halfclean <- read.csv("./data/ratsSNPs_halfclean.csv")
+
+# need to remove Kamaka_008, and Rimatuu_19 and Rimatuu_20 due to position in Structure.
+# both the (pre-cleanup) NeighborNet and Structure identify Kayangel17 as concerning, as well as Kayangel11, 13, 15, 19, and 21. HWE shows also several loci in Kayangel as problematic, but not in other popn.s (with 1 exception). Since the loci are only problematic in Kayangel popn., I believe the issue is in the specimens, not the loci themselves.
+
+remove <- c("Kamaka_008", "Rimatuu_19", "Rimatuu_20", "Kayangel11", "Kayangel13", "Kayangel15", "Kayangel17", "Kayangel19", "Kayangel21") # names of specimens to remove (each name should have exactly 10 characters)
+x <- sapply(remove, function(i) grep(i, x = halfclean$island, value = FALSE)) # finding the row numbers of the specimens to remove
+halfclean[c(x),1] # checking the names match
+clean <- halfclean[-c(x),] # removing rows described above
+
+getwd()
+write.csv(clean, "./data/ratsSNPs_clean.csv", row.names = FALSE)
+
+rm(x, remove)
+```
+
+## Double checking for monomorphic columns (SNP loci)
+
+```{r invariant removal, eval = FALSE}
+ncol(clean) #298
+monocols <- integer() # empty vector for the for loop
+for (i in 17:298) {
+  z <- length(unique(clean[,i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
+    if (z <= 3) 
+      {monocols <- append(monocols, i) # if z is as so, add the column number to the vector
+    }
+  rm(z)
+} 
+# tried with z <= 2 but no result, therefore tried z <= 3 and checked the results manually below.
+
+monocols # 29  30  43  52  54  76  84  86  89 105 113 115 123 127 136 149 154 155 156 170 179 182 183 200 204 205 209 211 214 216 222 223 224 230 235 243 290 295 296
+for (i in monocols) {
+  print(count(clean[,i]))
+}
+# none with only 1 unique SNP in each column. It's possible since the SNP loci were selected for their differences, but double check this 
+```
+
+```{r column deletion, eval = FALSE}
+# x <- x[,-c(monocols)] # for removal of monomorphic columns, but none found
+
+rm(i, monocols)
 ```
 
 
 
-
-## Prep for Structure Analysis
-
-## Structure Analysis and removal 
-
-
-
-To do:
-
-- cleanup: remove SNPs not in HW equilibrium
-- cleanup: remove samples that are weird in the structure analysis
-- cleanup: double check for monomorphic columns
-- re-run NeighborNet and Mantel test
-- aggregate samples at island level, calculate island-to-island Fst and/or Nei distance
-- calculate heterozygosity, should decrease with distance, possibly be shaped by island size
-- PCA on the SNPs
