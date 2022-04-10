@@ -1,0 +1,257 @@
+Log file path: C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/ratsSNPs_arl_input.res/Arlequin_log.txt
+Core Program Directory: C:/Users/airhe/Downloads/WinArl35/
+Random number generator initialized with lidum=-294515
+Reading project profile section...
+done !
+Opening next project...
+C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/ratsSNPs_arl_input.arp
+////////////////////////////////////////////////////////////////////
+RUN NUMBER 1 (14/03/22 at 12:51:29)
+////////////////////////////////////////////////////////////////////
+
+
+Reading Project: 
+Reading input file ...
+	Reading Samples section ...
+	Reading Aotea ... 
+	done ! (0 ms)
+
+	Reading Borneo ... 
+	done ! (0 ms)
+
+	Reading Doubtful_Sound ... 
+	done ! (0 ms)
+
+	Reading Great_Mercury_Island ... 
+	done ! (0 ms)
+
+	Reading Halmahera ... 
+	done ! (0 ms)
+
+	Reading Hatutaa ... 
+	done ! (0 ms)
+
+	Reading Honuea ... 
+	done ! (0 ms)
+
+	Reading Kaikura_Island ... 
+	done ! (0 ms)
+
+	Reading Kamaka ... 
+	done ! (0 ms)
+
+	Reading Kayangel ... 
+	done ! (0 ms)
+
+	Reading Late_Island ... 
+	done ! (16 ms)
+
+	Reading Mainland ... 
+	done ! (0 ms)
+
+	Reading Malenge ... 
+	done ! (0 ms)
+
+	Reading Mohotani ... 
+	done ! (0 ms)
+
+	Reading Motukawanui ... 
+	done ! (0 ms)
+
+	Reading New_Britain ... 
+	done ! (0 ms)
+
+	Reading New_Guinea ... 
+	done ! (0 ms)
+
+	Reading Normanby_Island ... 
+	done ! (0 ms)
+
+	Reading Rakiura ... 
+	done ! (0 ms)
+
+	Reading Reiono ... 
+	done ! (0 ms)
+
+	Reading Rimatuu ... 
+	done ! (0 ms)
+
+	Reading Slipper_Island ... 
+	done ! (0 ms)
+
+	Reading Sulawesi ... 
+	done ! (0 ms)
+
+	Reading Tahanea ... 
+	done ! (0 ms)
+
+	Reading Wake_Island ... 
+	done ! (0 ms)
+
+	done reading Samples section! (16 ms)
+done ! (16 ms)
+
+------------------------------------------------------------------------
+  Checking all selected options...
+		Building vectors of alleles...
+		done in 0 ms
+  done!
+  check selected settings...
+  done!
+
+Population 'Aotea' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 9478 ms
+
+Population 'Borneo' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 23520 ms
+
+Population 'Doubtful_Sound' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 1844 ms
+
+Population 'Great_Mercury_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 2627 ms
+
+Population 'Halmahera' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 21782 ms
+
+Population 'Hatutaa' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 10582 ms
+
+Population 'Honuea' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 6174 ms
+
+Population 'Kaikura_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 9758 ms
+
+Population 'Kamaka' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 13564 ms
+
+Population 'Kayangel' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 16181 ms
+
+Population 'Late_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 19061 ms
+
+Population 'Mainland' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 25801 ms
+
+Population 'Malenge' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 21796 ms
+
+Population 'Mohotani' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 10649 ms
+
+Population 'Motukawanui' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 7193 ms
+
+Population 'New_Britain' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 17688 ms
+
+Population 'New_Guinea' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 10153 ms
+
+Population 'Normanby_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 2990 ms
+
+Population 'Rakiura' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 12426 ms
+
+Population 'Reiono' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 12264 ms
+
+Population 'Rimatuu' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 11294 ms
+
+Population 'Slipper_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 8546 ms
+
+Population 'Sulawesi' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 20724 ms
+
+Population 'Tahanea' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 9059 ms
+
+Population 'Wake_Island' : 
+	Testing Hardy-Weinberg equilibrium ...
+	done !
+
+done in 12650 ms
+
+////////////////////////////////////////////////////////////////////
+END OF RUN NUMBER 1 (14/03/22 at 12:56:47))
+Total computing time for this run : 0h 5m 17s 859 ms
+////////////////////////////////////////////////////////////////////
+
+Successful run of C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/ratsSNPs_arl_input.arp

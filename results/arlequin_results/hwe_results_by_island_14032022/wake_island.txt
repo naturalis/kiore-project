@@ -1,0 +1,284 @@
+Locus  #Genot       Obs.Het.     Exp.Het.   P-value     s.d.  Steps done
+------------------------------------------------------------------------
+    1   This locus is monomorphic: no test done.
+    2   This locus is monomorphic: no test done.
+    3      20       0.05000      0.14231    0.07705  0.00025     1001000
+    4   This locus is monomorphic: no test done.
+    5   This locus is monomorphic: no test done.
+    6   This locus is monomorphic: no test done.
+    7   This locus is monomorphic: no test done.
+    8   This locus is monomorphic: no test done.
+    9   This locus is monomorphic: no test done.
+   10      20       0.40000      0.51282    0.39198  0.00048     1001000
+   11      20       0.35000      0.35769    1.00000  0.00000     1001000
+   12   This locus is monomorphic: no test done.
+   13   This locus is monomorphic: no test done.
+   14      20       0.05000      0.05000    1.00000  0.00000     1001000
+   15      20       0.05000      0.05000    1.00000  0.00000     1001000
+   16   This locus is monomorphic: no test done.
+   17      20       0.10000      0.09744    1.00000  0.00000     1001000
+   18      18       0.44444      0.35556    0.52805  0.00050     1001000
+   19   This locus is monomorphic: no test done.
+   20   This locus is monomorphic: no test done.
+   21      20       0.30000      0.26154    1.00000  0.00000     1001000
+   22      20       0.25000      0.29615    0.46718  0.00049     1001000
+   23   This locus is monomorphic: no test done.
+   24      11       0.00000      0.41558    0.00223  0.00005     1001000
+   25      15       0.26667      0.40460    0.22645  0.00041     1001000
+   26   This locus is monomorphic: no test done.
+   27   This locus is monomorphic: no test done.
+   28   This locus is monomorphic: no test done.
+   29   This locus is monomorphic: no test done.
+   30   This locus is monomorphic: no test done.
+   31   This locus is monomorphic: no test done.
+   32      19       0.31579      0.34139    1.00000  0.00000     1001000
+   33      20       0.30000      0.50769    0.08523  0.00028     1001000
+   34   This locus is monomorphic: no test done.
+   35      17       0.23529      0.42781    0.08902  0.00029     1001000
+   36   This locus is monomorphic: no test done.
+   37   This locus is monomorphic: no test done.
+   38      20       0.00000      0.09744    0.02614  0.00016     1001000
+   39      20       0.00000      0.09744    0.02604  0.00016     1001000
+   40   This locus is monomorphic: no test done.
+   41   This locus is monomorphic: no test done.
+   42      20       0.10000      0.09744    1.00000  0.00000     1001000
+   43   This locus is monomorphic: no test done.
+   44      20       0.10000      0.09744    1.00000  0.00000     1001000
+   45   This locus is monomorphic: no test done.
+   46      20       0.15000      0.22436    0.24609  0.00043     1001000
+   47   This locus is monomorphic: no test done.
+   48   This locus is monomorphic: no test done.
+   49   This locus is monomorphic: no test done.
+   50   This locus is monomorphic: no test done.
+   51   This locus is monomorphic: no test done.
+   52      20       0.50000      0.49231    1.00000  0.00000     1001000
+   53      20       0.10000      0.09744    1.00000  0.00000     1001000
+   54      20       0.45000      0.45000    1.00000  0.00000     1001000
+   55   This locus is monomorphic: no test done.
+   56      19       0.31579      0.50071    0.15839  0.00036     1001000
+   57   This locus is monomorphic: no test done.
+   58   This locus is monomorphic: no test done.
+   59   This locus is monomorphic: no test done.
+   60   This locus is monomorphic: no test done.
+   61      20       0.30000      0.46667    0.14908  0.00036     1001000
+   62   This locus is monomorphic: no test done.
+   63      20       0.40000      0.32821    0.54785  0.00051     1001000
+   64      20       0.05000      0.05000    1.00000  0.00000     1001000
+   65   This locus is monomorphic: no test done.
+   66      20       0.30000      0.38462    0.54269  0.00049     1001000
+   67   This locus is monomorphic: no test done.
+   68   This locus is monomorphic: no test done.
+   69   This locus is monomorphic: no test done.
+   70   This locus is monomorphic: no test done.
+   71   This locus is monomorphic: no test done.
+   72   This locus is monomorphic: no test done.
+   73   This locus is monomorphic: no test done.
+   74      19       0.15789      0.14936    1.00000  0.00000     1001000
+   75      20       0.45000      0.48077    1.00000  0.00000     1001000
+   76      20       0.30000      0.26154    1.00000  0.00000     1001000
+   77   This locus is monomorphic: no test done.
+   78   This locus is monomorphic: no test done.
+   79   This locus is monomorphic: no test done.
+   80      20       0.50000      0.50769    1.00000  0.00000     1001000
+   81   This locus is monomorphic: no test done.
+   82   This locus is monomorphic: no test done.
+   83   This locus is monomorphic: no test done.
+   84   This locus is monomorphic: no test done.
+   85      19       0.26316      0.51351    0.06223  0.00026     1001000
+   86      20       0.30000      0.49231    0.15443  0.00038     1001000
+   87      10       0.30000      0.47895    0.47938  0.00051     1001000
+   88   This locus is monomorphic: no test done.
+   89   This locus is monomorphic: no test done.
+   90      20       0.40000      0.50769    0.39390  0.00049     1001000
+   91   This locus is monomorphic: no test done.
+   92      20       0.05000      0.05000    1.00000  0.00000     1001000
+   93      20       0.55000      0.51154    1.00000  0.00000     1001000
+   94   This locus is monomorphic: no test done.
+   95   This locus is monomorphic: no test done.
+   96   This locus is monomorphic: no test done.
+   97   This locus is monomorphic: no test done.
+   98   This locus is monomorphic: no test done.
+   99   This locus is monomorphic: no test done.
+  100   This locus is monomorphic: no test done.
+  101   This locus is monomorphic: no test done.
+  102      19       0.52632      0.44381    0.60602  0.00047     1001000
+  103   This locus is monomorphic: no test done.
+  104      20       0.45000      0.50128    0.67383  0.00047     1001000
+  105   This locus is monomorphic: no test done.
+  106   This locus is monomorphic: no test done.
+  107       5       0.00000      0.35556    0.11114  0.00033     1001000
+  108      20       0.70000      0.46667    0.04243  0.00021     1001000
+  109      20       0.05000      0.05000    1.00000  0.00000     1001000
+  110   This locus is monomorphic: no test done.
+  111   This locus is monomorphic: no test done.
+  112   This locus is monomorphic: no test done.
+  113   This locus is monomorphic: no test done.
+  114   This locus is monomorphic: no test done.
+  115   This locus is monomorphic: no test done.
+  116   This locus is monomorphic: no test done.
+  117   This locus is monomorphic: no test done.
+  118   This locus is monomorphic: no test done.
+  119   This locus is monomorphic: no test done.
+  120   This locus is monomorphic: no test done.
+  121   This locus is monomorphic: no test done.
+  122      20       0.60000      0.49231    0.38564  0.00052     1001000
+  123   This locus is monomorphic: no test done.
+  124   This locus is monomorphic: no test done.
+  125      18       0.05556      0.05556    1.00000  0.00000     1001000
+  126   This locus is monomorphic: no test done.
+  127      20       0.05000      0.45000    0.00011  0.00001     1001000
+  128   This locus is monomorphic: no test done.
+  129   This locus is monomorphic: no test done.
+  130   This locus is monomorphic: no test done.
+  131      19       0.10526      0.10242    1.00000  0.00000     1001000
+  132   This locus is monomorphic: no test done.
+  133      20       0.40000      0.32821    0.54845  0.00050     1001000
+  134   This locus is monomorphic: no test done.
+  135      20       0.30000      0.32821    1.00000  0.00000     1001000
+  136   This locus is monomorphic: no test done.
+  137   This locus is monomorphic: no test done.
+  138   This locus is monomorphic: no test done.
+  139   This locus is monomorphic: no test done.
+  140   This locus is monomorphic: no test done.
+  141      20       0.35000      0.35769    1.00000  0.00000     1001000
+  142   This locus is monomorphic: no test done.
+  143      20       0.20000      0.51282    0.00834  0.00009     1001000
+  144   This locus is monomorphic: no test done.
+  145   This locus is monomorphic: no test done.
+  146      20       0.20000      0.18462    1.00000  0.00000     1001000
+  147      20       0.10000      0.18462    0.15104  0.00034     1001000
+  148   This locus is monomorphic: no test done.
+  149      20       0.45000      0.48077    1.00000  0.00000     1001000
+  150   This locus is monomorphic: no test done.
+  151      20       0.15000      0.14231    1.00000  0.00000     1001000
+  152   This locus is monomorphic: no test done.
+  153   This locus is monomorphic: no test done.
+  154   This locus is monomorphic: no test done.
+  155   This locus is monomorphic: no test done.
+  156   This locus is monomorphic: no test done.
+  157   This locus is monomorphic: no test done.
+  158      19       0.26316      0.37127    0.23601  0.00043     1001000
+  159      20       0.20000      0.43077    0.02593  0.00016     1001000
+  160   This locus is monomorphic: no test done.
+  161      20       0.00000      0.09744    0.02607  0.00016     1001000
+  162   This locus is monomorphic: no test done.
+  163   This locus is monomorphic: no test done.
+  164      20       0.05000      0.05000    1.00000  0.00000     1001000
+  165   This locus is monomorphic: no test done.
+  166      20       0.10000      0.18462    0.15126  0.00034     1001000
+  167   This locus is monomorphic: no test done.
+  168   This locus is monomorphic: no test done.
+  169      20       0.30000      0.26154    1.00000  0.00000     1001000
+  170      20       0.25000      0.51154    0.02971  0.00016     1001000
+  171      20       0.45000      0.40897    1.00000  0.00000     1001000
+  172   This locus is monomorphic: no test done.
+  173   This locus is monomorphic: no test done.
+  174   This locus is monomorphic: no test done.
+  175      20       0.05000      0.05000    1.00000  0.00000     1001000
+  176   This locus is monomorphic: no test done.
+  177   This locus is monomorphic: no test done.
+  178   This locus is monomorphic: no test done.
+  179   This locus is monomorphic: no test done.
+  180      20       0.05000      0.05000    1.00000  0.00000     1001000
+  181   This locus is monomorphic: no test done.
+  182   This locus is monomorphic: no test done.
+  183   This locus is monomorphic: no test done.
+  184      20       0.35000      0.35769    1.00000  0.00000     1001000
+  185      19       0.00000      0.10242    0.02719  0.00015     1001000
+  186   This locus is monomorphic: no test done.
+  187      20       0.05000      0.05000    1.00000  0.00000     1001000
+  188      20       0.10000      0.18462    0.15279  0.00036     1001000
+  189   This locus is monomorphic: no test done.
+  190   This locus is monomorphic: no test done.
+  191   This locus is monomorphic: no test done.
+  192   This locus is monomorphic: no test done.
+  193      17       0.05882      0.05882    1.00000  0.00000     1001000
+  194   This locus is monomorphic: no test done.
+  195   This locus is monomorphic: no test done.
+  196      20       0.30000      0.43077    0.28139  0.00045     1001000
+  197      20       0.15000      0.22436    0.24612  0.00041     1001000
+  198   This locus is monomorphic: no test done.
+  199      20       0.45000      0.45000    1.00000  0.00000     1001000
+  200   This locus is monomorphic: no test done.
+  201   This locus is monomorphic: no test done.
+  202      20       0.15000      0.14231    1.00000  0.00000     1001000
+  203      19       0.05263      0.05263    1.00000  0.00000     1001000
+  204   This locus is monomorphic: no test done.
+  205   This locus is monomorphic: no test done.
+  206   This locus is monomorphic: no test done.
+  207   This locus is monomorphic: no test done.
+  208   This locus is monomorphic: no test done.
+  209   This locus is monomorphic: no test done.
+  210      20       0.30000      0.32821    1.00000  0.00000     1001000
+  211   This locus is monomorphic: no test done.
+  212   This locus is monomorphic: no test done.
+  213   This locus is monomorphic: no test done.
+  214   This locus is monomorphic: no test done.
+  215      20       0.00000      0.09744    0.02538  0.00015     1001000
+  216      20       0.45000      0.48077    1.00000  0.00000     1001000
+  217   This locus is monomorphic: no test done.
+  218   This locus is monomorphic: no test done.
+  219   This locus is monomorphic: no test done.
+  220      19       0.26316      0.50782    0.06103  0.00025     1001000
+  221   This locus is monomorphic: no test done.
+  222   This locus is monomorphic: no test done.
+  223   This locus is monomorphic: no test done.
+  224      20       0.20000      0.18462    1.00000  0.00000     1001000
+  225   This locus is monomorphic: no test done.
+  226   This locus is monomorphic: no test done.
+  227   This locus is monomorphic: no test done.
+  228      20       0.40000      0.46667    0.63332  0.00046     1001000
+  229   This locus is monomorphic: no test done.
+  230   This locus is monomorphic: no test done.
+  231      20       0.05000      0.05000    1.00000  0.00000     1001000
+  232      20       0.35000      0.35769    1.00000  0.00000     1001000
+  233   This locus is monomorphic: no test done.
+  234      20       0.00000      0.09744    0.02554  0.00015     1001000
+  235      20       0.65000      0.48077    0.16344  0.00038     1001000
+  236   This locus is monomorphic: no test done.
+  237   This locus is monomorphic: no test done.
+  238   This locus is monomorphic: no test done.
+  239   This locus is monomorphic: no test done.
+  240   This locus is monomorphic: no test done.
+  241   This locus is monomorphic: no test done.
+  242   This locus is monomorphic: no test done.
+  243   This locus is monomorphic: no test done.
+  244   This locus is monomorphic: no test done.
+  245      12       0.41667      0.48913    1.00000  0.00000     1001000
+  246   This locus is monomorphic: no test done.
+  247   This locus is monomorphic: no test done.
+  248      20       0.05000      0.05000    1.00000  0.00000     1001000
+  249      20       0.25000      0.35769    0.21250  0.00044     1001000
+  250      20       0.30000      0.38462    0.54301  0.00047     1001000
+  251      20       0.15000      0.14231    1.00000  0.00000     1001000
+  252      20       0.05000      0.05000    1.00000  0.00000     1001000
+  253      20       0.05000      0.05000    1.00000  0.00000     1001000
+  254   This locus is monomorphic: no test done.
+  255      20       0.05000      0.05000    1.00000  0.00000     1001000
+  256   This locus is monomorphic: no test done.
+  257   This locus is monomorphic: no test done.
+  258      20       0.05000      0.05000    1.00000  0.00000     1001000
+  259   This locus is monomorphic: no test done.
+  260   This locus is monomorphic: no test done.
+  261   This locus is monomorphic: no test done.
+  262   This locus is monomorphic: no test done.
+  263      20       0.20000      0.26154    0.35480  0.00048     1001000
+  264   This locus is monomorphic: no test done.
+  265   This locus is monomorphic: no test done.
+  266      20       0.25000      0.29615    0.46879  0.00051     1001000
+  267      20       0.15000      0.14231    1.00000  0.00000     1001000
+  268      20       0.35000      0.51154    0.19826  0.00037     1001000
+  269   This locus is monomorphic: no test done.
+  270      20       0.30000      0.38462    0.54304  0.00049     1001000
+  271   This locus is monomorphic: no test done.
+  272      19       0.10526      0.10242    1.00000  0.00000     1001000
+  273   This locus is monomorphic: no test done.
+  274      20       0.65000      0.50128    0.35441  0.00047     1001000
+  275      20       0.35000      0.48077    0.34019  0.00048     1001000
+  276   This locus is monomorphic: no test done.
+  277      20       0.10000      0.18462    0.15246  0.00035     1001000
+  278      18       0.05556      0.05556    1.00000  0.00000     1001000
+  279   This locus is monomorphic: no test done.
+  280   This locus is monomorphic: no test done.
+  281   This locus is monomorphic: no test done.
+  282   This locus is monomorphic: no test done.
