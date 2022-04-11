@@ -1,5 +1,5 @@
 ---
-title: "Data_cleanup"
+title: "Cleaning the Polynesian Rat SNP raw data file"
 author: "Grace Saville"
 date: "11/02/2022"
 output: pdf_document
@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Preamble 
+# Preamble 
 
 ```{r libraries, eval = FALSE}
 library(plyr)
@@ -18,7 +18,7 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-## Loading the data
+# Loading the data
 
 ```{r loading data, eval = FALSE}
 data <- read.delim("./data/Genotyping-007.010-01_SNP_Raw_data.tsv")
@@ -37,7 +37,7 @@ data[473,"island.1"] <- "Mainland"
 x <- data # keeping "data" as backup original
 ```
 
-## Tidying SNP order
+# Tidying SNP order
 
 I'm doing this to make R evaluation easier (e.g when checking for counts it does not count A:G and G:A separately)
 ```{r SNP arrangement, eval = FALSE}
@@ -55,7 +55,7 @@ count(unlist(x[,17:333])) # checking success
 
 ### Specimens per Island before data clean-up
 
-```{r eval = FALSE}
+```{r count per island 1, eval = FALSE}
 count(data$island.1)
 ```
 
@@ -89,16 +89,16 @@ count(data$island.1)
 |Wake Island|20|
 
 
-## Removing SNP columns with no variation (invariant/monomorphic)
+# Removing SNP columns with no variation (invariant/monomorphic)
 
-```{r invariant removal, eval = FALSE}
+```{r invariant column search, eval = FALSE}
 ncol(x) #333
 monocols <- integer() # empty vector for the for loop
 for (i in 17:333) {
-  z <- length(unique(x[,i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
-    if (z <= 3) 
-      {monocols <- append(monocols, i) # if z is as so, add the column number to the vector
-    }
+  z <- length(unique(x[, i])) # no. of unique values in the row (looking for 1, or 2 if there's "?")
+  if (z <= 3) {
+    monocols <- append(monocols, i) # if z is as so, add the column number to the vector
+  }
   rm(z)
 } 
 # tried with z <= 2 but no result, therefore tried z <= 3 and checked the results manually below.
@@ -110,13 +110,13 @@ for (i in monocols) {
 # none with only 1 unique SNP in each column ...? It's possible since the SNP loci were selected for their differences, but double check this 
 ```
 
-```{r column deletion, eval = FALSE}
+```{r column deletion 1, eval = FALSE}
 # x <- x[,-c(monocols)] # for removal of monomorphic columns
 
 rm(i, monocols)
 ```
 
-## Removing columns (SNPs) with few samples
+# Removing columns (SNPs) with few samples
 
 ```{r removing sparse columns, eval = FALSE}
 ncol(x) #333
@@ -144,7 +144,7 @@ ncol(x) #298
 rm(i, percblank)
 ```
 
-## Removing rows (specimens) with few samples
+# Removing rows (specimens) with few samples
 
 ```{r removing sparse rows, eval = FALSE}
 x2 <- data.table::transpose(x) # transposing the df temporarily since count() doesn't work well on rows
@@ -185,7 +185,7 @@ write.csv(x, "./data/ratsSNPs_halfclean.csv", row.names = FALSE)
 ```
 
 
-## Prepping df for HWE Analysis
+# Prepping df for HWE Analysis
 
 I would like to remove the SNPs not in Hardy-Weinberg equilibrium, therefore I need to reformat the data for input into HWE function.
 
@@ -220,7 +220,7 @@ x2 <- x3
 rm(x3, coln) # removing excess objects
 ```
 
-The following chunk is for for producing the file necessary for PGDSpider program:
+### Producing the file necessary for PGDSpider program
 
 ```{r file prep, eval = FALSE}
 x2 <- x2[order(x2$island, decreasing = FALSE),] # ordering df alphabetically by island
@@ -315,10 +315,10 @@ rm(list = c(letters[seq(from = 1, to = 23)], "y", "z")) # removing excess object
 - check which specimens will be in the mainland popn. (e.g. luzon, also Borneo and Sulawesi), and if populations w 1 specimen are viable (e.g. doubtful sound and great mercury isl.)
 
 
-## HWE Analysis and removal
+# HWE Analysis and removal
 
 ### Creating loop for reading the HWE files
-```{r}
+```{r reading HWE files, eval = FALSE}
 getwd()
 setwd("./results/arlequin_results/hwe_results_by_island_14032022")
 filenames <- as.vector(list.files())
@@ -341,25 +341,16 @@ for (i in 1:length(filenames)) {
 }
 
 rm(i, ii, m, df, filenames)
+setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
-
-Reading the tables
-Locus:
-Genot:
-Obs.Het: Observed Heterozygosity
-Exp.Het: Expected Heterozygosity
-P.value:
-s.d:
-Steps.done:
-
 
 ### Checking the HWE P-values
 
-```{r eval = FALSE}
+```{r making hwe results df, eval = FALSE}
 objectnames <- as.vector(ls()) # should be islands only, otherwise remove extras from vector
 objectnames
 # If necessary:
-objectnames <- objectnames[-c(3, 27, 28)] # removing non-island objects
+# objectnames <- objectnames[-c(3, 27, 28)] # removing non-island objects
 
 # making df of all hwe results
 hwe.all <- data.frame()
@@ -374,31 +365,95 @@ rm(islandpop, foo, i)
 rm(list = objectnames) # removes all the island objects
 ```
 
-Running a Holm's Sequential Bonferroni test to adjust p-values
-```{r eval = FALSE}
+### Running Holm's Sequential Bonferroni test to adjust p-values
+```{r bonferroni test, eval = FALSE}
 nrow(hwe.all) # 2622
 
-p.value.adjusted <- c(p.adjust(hwe.all$P.value, method = "holm")) # do I not need to insert the threshold??
-hwe.all$p.value.adjusted <- p.value.adjusted
+p.value.adjusted <- c(p.adjust(hwe.all$P.value, method = "holm")) # adjusting p-values
+hwe.all$p.value.adjusted <- p.value.adjusted # making new column
 
 rm(p.value.adjusted)
+getwd()
+write.csv(hwe.all, "./data/HWEanalysis_allresults.csv", row.names = FALSE)
 ```
-General holm's formula:
-target alpha level / no. of tests - rank no. of pair (by degree of signif.) + 1
 
-Examining significant hwe p-values
-```{r eval = FALSE}
+### Examining significant hwe p-values
+```{r adjusted p-value summary, eval = FALSE}
+hwe.all <- read.csv("./data/HWEanalysis_allresults.csv")
 hwe.signif <- hwe.all[which(hwe.all$p.value.adjusted <= 0.05),]
 hwe.signif[,c(1,8,9)]
-count(hwe.signif$Locus) # 2 at locus 41 (Kaikura and Reiono), rest are singles
-count(hwe.signif$islandpop) # concerning that 17 of 23 are Kayangel
+plyr::count(hwe.signif$Locus) # 2 at locus 41 (Kaikura and Reiono), rest are singles
+plyr::count(hwe.signif$islandpop) # concerning that 17 of 23 are Kayangel
 ```
 
+### Adjusted p-values per Locus
 
-## Removing samples/loci with issues identified in HWE and Structure analyses
-```{r eval = FALSE}
+|Locus|islandpop|p.value.adjusted|
+|:----:|:----:|:----:|
+|127|honuea|0.02613|
+|182|honuea|0.00000|
+|41|kaikura_island|0.02613|
+|16|kayangel|0.02613|
+|37|kayangel|0.02613|
+|50|kayangel|0.02613|
+|54|kayangel|0.02613|
+|61|kayangel|0.02613|
+|62|kayangel|0.00000|
+|67|kayangel|0.00000|
+|84|kayangel|0.00000|
+|93|kayangel|0.02613|
+|122|kayangel|0.00000|
+|170|kayangel|0.02613|
+|171|kayangel|0.02613|
+|177|kayangel|0.00000|
+|211|kayangel|0.02613|
+|252|kayangel|0.02613|
+|266|kayangel|0.00000|
+|278|kayangel|0.00000|
+|107|rakiura|0.02613|
+|128|rakiura|0.02613|
+|41|reiono|0.00000|
+
+### Number of islands with a significant adjusted p-value at a particular locus
+
+|loci column|freq|
+|:----:|:----:|
+|16|1|
+|37|1|
+|41|2|
+|50|1|
+|54|1|
+|61|1|
+|62|1|
+|67|1|
+|84|1|
+|93|1|
+|107|1|
+|122|1|
+|127|1|
+|128|1|
+|170|1|
+|171|1|
+|177|1|
+|182|1|
+|211|1|
+|252|1|
+|266|1|
+|278|1|
+
+### Number of loci per island population with significant adjusted p-values
+
+|island population|no. of signif. loci|
+|:----:|:----:|
+|honuea|2|
+|kaikura_island|1|
+|kayangel|17|
+|rakiura|2|
+|reiono|1|
+
+# Removing samples/loci with issues identified in HWE and Structure analyses
+```{r specimen removal, eval = FALSE}
 getwd()
-setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 halfclean <- read.csv("./data/ratsSNPs_halfclean.csv")
 
 # need to remove Kamaka_008, and Rimatuu_19 and Rimatuu_20 due to position in Structure.
@@ -415,9 +470,9 @@ write.csv(clean, "./data/ratsSNPs_clean.csv", row.names = FALSE)
 rm(x, remove)
 ```
 
-## Double checking for monomorphic columns (SNP loci)
+# Double checking for monomorphic columns (SNP loci)
 
-```{r invariant removal, eval = FALSE}
+```{r invariant column check, eval = FALSE}
 ncol(clean) #298
 monocols <- integer() # empty vector for the for loop
 for (i in 17:298) {
@@ -436,11 +491,45 @@ for (i in monocols) {
 # none with only 1 unique SNP in each column. It's possible since the SNP loci were selected for their differences, but double check this 
 ```
 
-```{r column deletion, eval = FALSE}
+```{r possible column deletion 2, eval = FALSE}
 # x <- x[,-c(monocols)] # for removal of monomorphic columns, but none found
 
 rm(i, monocols)
 ```
 
+# Specimens per Island after data clean-up
 
+```{r count per island 2, eval = FALSE}
+plyr::count(clean$island.1)
+```
 
+|Island|freq before cleanup|freq after cleanup|difference|
+|:----:|:----:|:----:|:----:|
+|Aotea (Great Barrier I)|10|10|0|
+|Borneo|25|18|7|
+|Doubtful Sound|1|1|0|
+|Great Mercury Island|1|1|0|
+|Halmahera|25|12|13|
+|Hatutaa|21|21|0|
+|Honuea|21|20|1|
+|Kaikura Island|20|20|0|
+|Kamaka|21|20|1|
+|Kayangel|21|15|6|
+|Late Island|21|21|0|
+|Luzon|1|1|0|
+|Mainland|5|5|0|
+|Malenge|25|12|13|
+|Mohotani|14|14|0|
+|Motukawanui|21|21|0|
+|New Britain|26|10|16|
+|New Guinea|25|3|22|
+|Normanby Island|25|1|24|
+|Rakiura (Stewart Isl)|21|21|0|
+|Reiono|21|21|0|
+|Rimatuu (Tetiaroa)|21|19|2|
+|Slipper Island|21|21|0|
+|Sulawesi|25|22|3|
+|Tahanea|20|20|0|
+|Wake Island|20|20|0|
+
+Islands represented by very few specimens (<= 3) are Doubtful Sound, Great Mercury Island, Luzon, New Guinea, and Normanby Island. 
