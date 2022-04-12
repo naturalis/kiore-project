@@ -6,12 +6,13 @@ output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(formatR)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
 # Preamble 
 
-```{r libraries, eval = FALSE}
+```{r libraries}
 library(plyr)
 library(reshape)
 getwd()
@@ -20,13 +21,13 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 
 # Loading the data
 
-```{r loading data, eval = FALSE}
+```{r loading raw data}
 data <- read.delim("./data/Genotyping-007.010-01_SNP_Raw_data.tsv")
 dim(data) #478 rows (specimens), 333 columns (SNP loci)
 data[1,1:17] # SNP data in columns 17 to 333
 ```
 
-```{r data check, eval = FALSE}
+```{r data check}
 class(data[5,17]) # character
 count(data$island.1) #  how many samples from each island there are
 data[data$island.1 == "",] # checking why 2 "island.1" cells are blank
@@ -40,7 +41,7 @@ x <- data # keeping "data" as backup original
 # Tidying SNP order
 
 I'm doing this to make R evaluation easier (e.g when checking for counts it does not count A:G and G:A separately)
-```{r SNP arrangement, eval = FALSE}
+```{r SNP arrangement}
 dim(x) # 333 cols
 count(unlist(x[,17:333]))
 x[x == "T:A"] <- "A:T"
@@ -55,7 +56,7 @@ count(unlist(x[,17:333])) # checking success
 
 ### Specimens per Island before data clean-up
 
-```{r count per island 1, eval = FALSE}
+```{r count per island 1}
 count(data$island.1)
 ```
 
@@ -91,7 +92,7 @@ count(data$island.1)
 
 # Removing SNP columns with no variation (invariant/monomorphic)
 
-```{r invariant column search, eval = FALSE}
+```{r invariant column search}
 ncol(x) #333
 monocols <- integer() # empty vector for the for loop
 for (i in 17:333) {
@@ -110,7 +111,7 @@ for (i in monocols) {
 # none with only 1 unique SNP in each column ...? It's possible since the SNP loci were selected for their differences, but double check this 
 ```
 
-```{r column deletion 1, eval = FALSE}
+```{r column deletion 1}
 # x <- x[,-c(monocols)] # for removal of monomorphic columns
 
 rm(i, monocols)
@@ -118,14 +119,14 @@ rm(i, monocols)
 
 # Removing columns (SNPs) with few samples
 
-```{r removing sparse columns, eval = FALSE}
+```{r removing sparse columns}
 ncol(x) #333
 percblank <- integer() # empty df for the for loop
 for (i in 17:333) {
   y <- count(grepl("?", x[,i], fixed = TRUE)) # finds and counts freq of ?
   z <- signif((nrow(x)- y[1,2])/nrow(x)*100, 4) # percentage of ? in the column, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no ?s and result in errors.
     if (z > 60) 
-      {percblank <- append(percblank, i) # if z (% of ?) is as so, add the column number to the vector
+      {percblank <- append(percblank, i) 
     }
   rm(z)
   rm(y)
@@ -137,7 +138,7 @@ percblank # 17  18  19  25  48  65  69  73  80  88  89  96 102 108 131 133 146 1
 # 320/478
 ```
 
-```{r column delction, eval = FALSE}
+```{r column delction}
 x <- x[,-c(percblank)] # removing columns listed above, with more than 60% missing data
 ncol(x) #298
 
@@ -146,17 +147,20 @@ rm(i, percblank)
 
 # Removing rows (specimens) with few samples
 
-```{r removing sparse rows, eval = FALSE}
+```{r removing sparse rows}
 x2 <- data.table::transpose(x) # transposing the df temporarily since count() doesn't work well on rows
 
 ncol(x2) #478 specimens
 percblank <- integer() # empty df for the for loop
 for (i in 1:478) {
   y <- count(grepl("?", x2[,i], fixed = TRUE)) # finds and counts freq of "?"
-  z <- signif((nrow(x2)- y[1,2])/nrow(x2)*100, 4) # percentage of "?" in the specimen, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no "?" and result in errors.
-    if (z > 56) # 56% missing allowed because it gives 90% completeness (see below)
-      {percblank <- append(percblank, i) # if z (% of "?") is as so, add the column number to the vector
-    }
+  z <- signif((nrow(x2) - y[1,2]) / nrow(x2) * 100, 4) # percentage of ? in the specimen, to 4 signif digits. 
+  # I used the no. rows-false outcomes instead of the true outcomes because some rows have no "?" and result in errors.
+  if (z > 56)
+    # 56 percent missing allowed because it gives 90% completeness (see below)
+  {
+    percblank <- append(percblank, i)
+  }
   rm(z)
   rm(y)
 }
@@ -167,12 +171,12 @@ percblank # 1   7   9  10  11  18  25  48  49  50  51  52  53  55  56  57  58  5
 # 185/298
 ```
 
-```{r row deletion, eval = FALSE}
+```{r row deletion}
 x <- x[-c(percblank),] # removing the rows listed (percblank) that have too many "?" from the df
 nrow(x) #379
 ```
 
-```{r check and save, eval = FALSE}
+```{r check and save}
 # checking the % of all "?"s in the df:
 z <- count(grepl("?", unlist(x), fixed = TRUE))
 signif(z[2,2]/(z[1,2]+z[2,2])*100, 4) # 9.723% "?"
@@ -189,12 +193,12 @@ write.csv(x, "./data/ratsSNPs_halfclean.csv", row.names = FALSE)
 
 I would like to remove the SNPs not in Hardy-Weinberg equilibrium, therefore I need to reformat the data for input into HWE function.
 
-```{r eval = FALSE}
+```{r loading data}
 load(".RData") # if necessary
 x <- read.csv("./data/ratsSNPs_halfclean.csv")
 ```
 
-```{r SNP column separation, eval = FALSE}
+```{r SNP column separation}
 x2 <- x # making a copy
 x2[1,1:20] # checking column names
 x2 <- x2[,-c(2:16)] # removing all but specimen names and SNPs
@@ -222,9 +226,9 @@ rm(x3, coln) # removing excess objects
 
 ### Producing the file necessary for PGDSpider program
 
-```{r file prep, eval = FALSE}
-x2 <- x2[order(x2$island, decreasing = FALSE),] # ordering df alphabetically by island
-print(as.matrix(x2[,1])) # printing the island names and row numbers 
+```{r file prep}
+x2 <- x2[order(x2$island, decreasing = FALSE), ] # ordering df alphabetically by island
+print(as.matrix(x2[, 1])) # printing the island names and row numbers
 
 # A=1, T=2, G=3, C=4
 x2[x2 == "A"] <- "1"
@@ -232,33 +236,36 @@ x2[x2 == "T"] <- "2"
 x2[x2 == "G"] <- "3"
 x2[x2 == "C"] <- "4"
 
-popnames <- as.character(c( # row numbers in dataset df listed below for each popn.
-  "pop = Aotea", # 1:10
-  "pop = Borneo", # 11:28
-  "pop = Doubtful_Sound", # 315
-  "pop = Great_Mercury_Island", # 30
-  "pop = Halmahera", # 31:42
-  "pop = Hatutaa", # 43:63
-  "pop = Honuea", # 64:83
-  "pop = Kaikura_Island", # 84:103
-  "pop = Kamaka", # 104:124
-  "pop = Kayangel", # 125:145
-  "pop = Late_Island", # 148:168
-  "pop = Mainland", # 29, 146, 147, 169, 358, 359
-  "pop = Malenge", # 170:181
-  "pop = Mohotani", # 182:195
-  "pop = Motukawanui", # 196:216
-  "pop = New_Britain", # 217:226
-  "pop = New_Guinea", # 227:229
-  "pop = Normanby_Island", # 230
-  "pop = Rakiura", # 231:251
-  "pop = Reiono", # 252:272
-  "pop = Rimatuu", # 273:293
-  "pop = Slipper_Island", # 294:314
-  "pop = Sulawesi", # 316:337
-  "pop = Tahanea", # 338:357
-  "pop = Wake_Island" # 360:379
-))
+# row numbers in dataset df listed below for each popn.
+popnames <- as.character(
+  c(
+    "pop = Aotea", # 1:10
+    "pop = Borneo", # 11:28
+    "pop = Doubtful_Sound", # 315
+    "pop = Great_Mercury_Island", # 30
+    "pop = Halmahera", # 31:42
+    "pop = Hatutaa", # 43:63
+    "pop = Honuea", # 64:83
+    "pop = Kaikura_Island", # 84:103
+    "pop = Kamaka", # 104:124
+    "pop = Kayangel", # 125:145
+    "pop = Late_Island", # 148:168
+    "pop = Mainland", # 29, 146, 147, 169, 358, 359
+    "pop = Malenge", # 170:181
+    "pop = Mohotani", # 182:195
+    "pop = Motukawanui", # 196:216
+    "pop = New_Britain", # 217:226
+    "pop = New_Guinea", # 227:229
+    "pop = Normanby_Island", # 230
+    "pop = Rakiura", # 231:251
+    "pop = Reiono", # 252:272
+    "pop = Rimatuu", # 273:293
+    "pop = Slipper_Island", # 294:314
+    "pop = Sulawesi", # 316:337
+    "pop = Tahanea", # 338:357
+    "pop = Wake_Island" # 360:379
+  )
+)
 
 # Creating population dfs
 a <- as.data.frame(x2[1:10,]) # Aotea
@@ -272,18 +279,18 @@ h <- as.data.frame(x2[84:103,]) # Kaikura_Island
 i <- as.data.frame(x2[104:124,]) # Kamaka
 j <- as.data.frame(x2[125:145,])  # Kayangel
 k <- as.data.frame(x2[148:168,]) # Late_Island
-l <- as.data.frame(x2[c(29, 146, 147, 169, 358, 359),]) # Mainland 
+l <- as.data.frame(x2[c(29, 146, 147, 169, 358, 359),]) # Mainland
 m <- as.data.frame(x2[170:181,]) # Malenge
-n <- as.data.frame(x2[182:195,]) # Mohotani 
+n <- as.data.frame(x2[182:195,]) # Mohotani
 o <- as.data.frame(x2[196:216,]) #  Motukawanui
 p <- as.data.frame(x2[217:226,]) #  New_Britain
-q <- as.data.frame(x2[227:229,]) # New_Guinea 
+q <- as.data.frame(x2[227:229,]) # New_Guinea
 r <- as.data.frame(x2[230,]) #  Normanby_Island
 s <- as.data.frame(x2[231:251,]) # Rakiura
 t <- as.data.frame(x2[252:272,]) # Reiono
-u <- as.data.frame(x2[273:293,]) # Rimatuu 
+u <- as.data.frame(x2[273:293,]) # Rimatuu
 v <- as.data.frame(x2[294:314,]) # Slipper_Island
-w <- as.data.frame(x2[316:337,]) #  Sulawesi 
+w <- as.data.frame(x2[316:337,]) #  Sulawesi
 # x already in use
 y <- as.data.frame(x2[338:357,]) # Tahanea
 z <- as.data.frame(x2[360:379,]) # Wake_Island
@@ -291,11 +298,11 @@ z <- as.data.frame(x2[360:379,]) # Wake_Island
 pops <- as.character(c(letters[seq(from = 1, to = 23)], "y", "z")) # list of popn object names
 ```
 
-```{r writing to file, eval = FALSE}
+```{r writing to file}
 ncol(x2) #565
 getwd()
 
-sink("./data/ratsSNPs_PGDSpyder_input.txt") # create empty file
+sink("./data/ratsSNPs_PGDSpider_input.txt") # create empty file
 cat("rats_SNPS", "npops = 25", "nloci = 282", fill = 1)
 cat("\t", fill = FALSE)
 cat(colnames(x2[,c(FALSE,TRUE)]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names (even columns only)
@@ -318,7 +325,7 @@ rm(list = c(letters[seq(from = 1, to = 23)], "y", "z")) # removing excess object
 # HWE Analysis and removal
 
 ### Creating loop for reading the HWE files
-```{r reading HWE files, eval = FALSE}
+```{r reading HWE files}
 getwd()
 setwd("./results/arlequin_results/hwe_results_by_island_14032022")
 filenames <- as.vector(list.files())
@@ -346,7 +353,7 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 
 ### Checking the HWE P-values
 
-```{r making hwe results df, eval = FALSE}
+```{r making hwe results df}
 objectnames <- as.vector(ls()) # should be islands only, otherwise remove extras from vector
 objectnames
 # If necessary:
@@ -366,7 +373,7 @@ rm(list = objectnames) # removes all the island objects
 ```
 
 ### Running Holm's Sequential Bonferroni test to adjust p-values
-```{r bonferroni test, eval = FALSE}
+```{r bonferroni test}
 nrow(hwe.all) # 2622
 
 p.value.adjusted <- c(p.adjust(hwe.all$P.value, method = "holm")) # adjusting p-values
@@ -378,7 +385,7 @@ write.csv(hwe.all, "./data/HWEanalysis_allresults.csv", row.names = FALSE)
 ```
 
 ### Examining significant hwe p-values
-```{r adjusted p-value summary, eval = FALSE}
+```{r adjusted p-value summary}
 hwe.all <- read.csv("./data/HWEanalysis_allresults.csv")
 hwe.signif <- hwe.all[which(hwe.all$p.value.adjusted <= 0.05),]
 hwe.signif[,c(1,8,9)]
@@ -452,7 +459,7 @@ plyr::count(hwe.signif$islandpop) # concerning that 17 of 23 are Kayangel
 |reiono|1|
 
 # Removing samples/loci with issues identified in HWE and Structure analyses
-```{r specimen removal, eval = FALSE}
+```{r specimen removal}
 getwd()
 halfclean <- read.csv("./data/ratsSNPs_halfclean.csv")
 
@@ -472,7 +479,7 @@ rm(x, remove)
 
 # Double checking for monomorphic columns (SNP loci)
 
-```{r invariant column check, eval = FALSE}
+```{r invariant column check}
 ncol(clean) #298
 monocols <- integer() # empty vector for the for loop
 for (i in 17:298) {
@@ -491,7 +498,7 @@ for (i in monocols) {
 # none with only 1 unique SNP in each column. It's possible since the SNP loci were selected for their differences, but double check this 
 ```
 
-```{r possible column deletion 2, eval = FALSE}
+```{r possible column deletion 2}
 # x <- x[,-c(monocols)] # for removal of monomorphic columns, but none found
 
 rm(i, monocols)
@@ -499,7 +506,7 @@ rm(i, monocols)
 
 # Specimens per Island after data clean-up
 
-```{r count per island 2, eval = FALSE}
+```{r count per island 2}
 plyr::count(clean$island.1)
 ```
 

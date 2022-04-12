@@ -1,54 +1,48 @@
 ---
-title: "NeighborNet_Treebuilding"
+title: "Creating file for NeighborNet Treebuilding"
 author: "Grace Saville"
 date: "01/10/2021"
 output: pdf_document
 ---
 # Preamble 
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, tidy.opts = list(width.cutoff = 70), tidy = TRUE)
 ```
 
-```{r libraries eval = FALSE}
-# Installing phylogenetics packages
-# install.packages('ctv')
-# library('ctv')
-# install.views('Phylogenetics')
-# update.views('Phylogenetics')
-library(plyr)
+```{r libraries}
+library(tidyr)
 library(ape)
 library(phylotools)
-library(stringr)
-library(dplyr)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-## Looking at the data
-```{r eval = FALSE}
-setwd("./data")
-data <- read.delim("Genotyping-007.010-01_SNP_Raw_data.tsv")
+# Loading the data
+
+```{r data loading}
+data <- read.csv("./data/ratsSNPs_clean.csv")
+dim(data) # 370 rows 298 columns
+str(data)
 ```
 
-
-
-## Making a subset
-```{r eval = FALSE}
-sub <- data[1:10,17:30] # making subset to experiment with
-str(sub)
-# sub[sub=="?"] <- NA # not sure if I want to replace the ?'s with NA's
-summary(sub)
-str(sub)
-
-```
-
-
-# Prep for making tree
-```{r eval = FALSE}
+# Testing the dat2phylip function
+```{r testing}
 x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
 dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
-# after some experimenting, spaces in the base strings aren't necessary, but 10 character length names are needed, dashes "-" are allowed, no differentiation between upper and lower case, only letters from bases or amino acids allowed (?, e.g acdefghiklmnprstvwyz)
 ```
+
+After some experimenting, for Phylip files...
+
+* spaces in the base strings aren't necessary
+* 10 character length names are needed
+* dashes "-" are allowed
+* no differentiation between upper and lower case
+* only letters from bases or amino acids allowed (?, e.g acdefghiklmnprstvwyz)
+
+
+# Replacing the SNP symbols with IUPAC Ambiguity code symbols
+
 IUPAC Ambiguity code:  
 
 |Symbol|SNP bases|
@@ -64,59 +58,37 @@ IUPAC Ambiguity code:
 |M (amino)|AC|
 |K (keto)|GT|
 
-```{r eval=FALSE}
-y <- data # making a copy
-# changing each SNP base combination to a single letter code
-# y[y=="?"] <- "-" # "?" also accepted by splitstree
-y[y=="A:A"] <- "A"
-y[y=="T:T"] <- "T"
-y[y=="C:C"] <- "C"
-y[y=="G:G"] <- "G"
-y[y=="A:G"] <- "R"
-y[y=="G:A"] <- "R"
-y[y=="C:T"] <- "Y"
-y[y=="T:C"] <- "Y"
-y[y=="A:T"] <- "W"
-y[y=="T:A"] <- "W"
-y[y=="C:G"] <- "S"
-y[y=="G:C"] <- "S"
-y[y=="A:C"] <- "M"
-y[y=="C:A"] <- "M"
-y[y=="G:T"] <- "K"
-y[y=="T:G"] <- "K"
+```{r replacing with IUPAC code}
+copy <- data # making a copy
 
-names(y)
-y <- y[,-c(2:16)] # removing the rows with information other than the species key and the code above
-y <- tidyr::unite(y, bases, -1, sep = "", remove = TRUE) # merging all the base columns into one column so it can be converted easily into a phylip file,
-y[,1] <- gsub("NBC.LAB.", "NBCLAB", y[,1]) # replacing part of the name of the rowname column so there is no punctuation and the names are exactly 10 characters long for the phylip file to work
-
-dat2phylip(y, outfile = "test2.phy")
-# something wrong with the file when opened in splitstree, e.g. illegal characters or two of the same specimen
-summary(duplicated(y[,1])) # no. 40 row name is duplicated
-# duplicated(y[,1], fromLast = FALSE)
-# duplicated(y[,1], fromLast = TRUE) # no. 39 is duplicated w no. 40
-# summary(duplicated(y)) # checking row 40 doesn't have the same code string as well
-# y[39:40,1] # "NBCLAB2005" "NBCLAB2005" need to replace one
-# tail(y[,1], 20) # last specimen is labelled NBCLAB2436, will rename duplicate 2437
-# y[40,1] <- "NBCLAB2437" # replacing duplicate w new name
-# summary(duplicated(y[,1])) # double checking
-# y[,1] # last 8 row names don't have 10 characters: "L0235" "L0234" "C0910" "GMI-4" "P0041" "R14018" "R6750" "R7129"
-# y[471,1] <- "L023500000" # replacing w new names
-# y[472,1] <- "L023400000"
-# y[473,1] <- "C091000000"
-# y[474,1] <- "GMI0400000"
-# y[475,1] <- "P004100000"
-# y[476,1] <- "R140180000"
-# y[477,1] <- "R675000000"
-# y[478,1] <- "R712900000"
-dat2phylip(y, outfile = "data.phy") # can be opened by splitstree when configured as proteins/amino acids
+copy[copy == "A:A"] <- "A"
+copy[copy == "T:T"] <- "T"
+copy[copy == "C:C"] <- "C"
+copy[copy == "G:G"] <- "G"
+copy[copy == "A:G"] <- "R"
+copy[copy == "G:A"] <- "R"
+copy[copy == "C:T"] <- "Y"
+copy[copy == "T:C"] <- "Y"
+copy[copy == "A:T"] <- "W"
+copy[copy == "T:A"] <- "W"
+copy[copy == "C:G"] <- "S"
+copy[copy == "G:C"] <- "S"
+copy[copy == "A:C"] <- "M"
+copy[copy == "C:A"] <- "M"
+copy[copy == "G:T"] <- "K"
+copy[copy == "T:G"] <- "K"
 ```
 
-Try writing directly to a .nex file since splitstree only reads the .phy file as protein:
-```{r eval = FALSE}
-y2 <- as.matrix(y)
-ape::write.nexus.data(y2, "nextestfile.nex", format = "dna") #doesn't format correctly, try again later?
+# Adjusting the data frame for Phylip output function
+
+```{r df adjustment}
+names(copy)
+copy <- copy[,-c(2:16)] # removing the rows with information other than the species key and codes
+copy <- unite(copy, bases, -1, sep = "", remove = TRUE) # merging all the base columns into one
 ```
 
-
+```{r phylip file creation}
+dat2phylip(copy, outfile = "./data/ratsSNPs_NeighborNet_input.phy") 
+# can be opened by splitstree when configured as proteins/amino acids
+```
 
