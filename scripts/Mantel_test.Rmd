@@ -22,18 +22,41 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 
 ```{r loading data}
 data <- read.csv("./data/ratsSNPs_clean.csv")
-gen.dist <- read.delim("./data/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE)
+gen.matrix <- as.matrix(read.delim("./data/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE))
 # Make sure the text file is the distances only, remove any extras e.g. column vector at bottom of file
 ```
 
 # Creating geographical distance matrix
 
-Using the mapview funtion in the last code chunk I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign. Fixing that here:
+Using the mapview funtion in the last code chunk I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign, and that Reiono and Honuea have the same coordinates even though they're different islands. Fixing that here:
 ```{r longitude adjustment}
 x <- grep("Tahanea", data$island.1, value = FALSE) # finding rows of Tahanea
 names(data) # finding column number for "geo_long"
 data[x, 12]
 data[x, 12] <- -144.97 # replacing the number
+
+# the coordinates given for Reiono and Honuea point to an island in French Polynesia called Moorea-Maiao
+# Reino should be approx. -17.046, -149.546
+# Honuea should be approx -17.009, -149.585
+# Checking other islands close by: 
+# Rimatu'u is -17, -149.57 (over the sea) but should be approx -17.03, -149.558
+
+x <- grep("Reiono", data$island.1, value = FALSE)
+data[x, c(11, 12)]
+data[x, 11] <- -17.046 # replcing geo_lat
+data[x, 12] <- -149.546 # replacing geo_long
+
+x <- grep("Honuea", data$island.1, value = FALSE)
+data[x, c(11, 12)]
+data[x, 11] <- -17.009 # replcing geo_lat
+data[x, 12] <- -149.585 # replacing geo_long
+
+x <- grep("Rimatuu", data$island.1, value = FALSE)
+data[x, c(11, 12)]
+data[x, 11] <- -17.03 # replcing geo_lat
+data[x, 12] <- -149.558 # replacing geo_long
+
+rm(x)
 
 write.csv(data, "./data/ratsSNPs_clean.csv", row.names = FALSE)
 ```
@@ -53,10 +76,10 @@ head(longlat) # checking correct columns are used
 
 longlat <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
 
-geo.dist <- distm(longlat, fun = distGeo) # converting to pairwise distance matrix
-dim(geo.dist) # 370 370
+geo.matrix <- distm(longlat, fun = distGeo) # converting to pairwise distance matrix
+dim(geo.matrix) # 370 370
 
-geo.dist <- as.dist(geo.dist, diag = TRUE, upper = TRUE) # converting to dist object
+geo.dist <- as.dist(geo.matrix, diag = TRUE, upper = TRUE) # converting to dist object
 # diag = TRUE #includes diagonal zeros
 # upper = TRUE #includes upper triangle
 ```
@@ -64,9 +87,8 @@ geo.dist <- as.dist(geo.dist, diag = TRUE, upper = TRUE) # converting to dist ob
 # Creating genetic distance matrix
 
 ```{r genetic distance matrix}
-gen.dist <- as.matrix(gen.dist)
-dim(gen.dist) # 370 370
-gen.dist <- as.dist(gen.dist, diag = TRUE, upper = TRUE) # converting to dist object
+dim(gen.matrix) # 370 370
+gen.dist <- as.dist(gen.matrix, diag = TRUE, upper = TRUE) # converting to dist object
 ```
 
 # Mantel test
@@ -80,17 +102,24 @@ mantel.rtest(gen.dist, geo.dist, nrepet = 999)
 Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
-Observation: 0.4991354   
+Observation: 0.4987612   
 
 Based on 999 replicates  
 Simulated p-value: 0.001   
 Alternative hypothesis: greater   
 
-Std.Obs: 24.4501375102  
-Expectation: -0.0003790180  
-Variance: 0.0004173817   
+Std.Obs: 23.7703702908  
+Expectation: -0.0004626768  
+Variance: 0.0004410815 
 
-**Results before I fixed the missing negative sign in Tahanea longitude:**  
+* -1 suggests strong negative correlation, e.g. closer islands mean further genetically or further islands means closer genetically
+* 0 suggests no correlation, e.g. genetic difference is not correlated to island distance
+* 1 suggests strong positive correlation e.g. closer islands mean closer genetically 
+
+Therefore the observed correlation of 0.4987612 suggests that there is a positive correlation between genetic distance and geographic distance (and the null hypothesis of no correlation is rejected).
+      
+
+**Results before I fixed the missing negative sign in Tahanea and other location issues:**  
 Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
@@ -103,12 +132,6 @@ Alternative hypothesis: greater
 Std.Obs: 2.329675e+01   
 Expectation: 7.916798e-04     
 Variance: 3.466772e-04  
-
-* -1 suggests strong negative correlation, e.g. closer islands mean further genetically or further islands means closer genetically
-* 0 suggests no correlation, e.g. genetic difference is not correlated to island distance
-* 1 suggests strong positive correlation e.g. closer islands mean closer genetically 
-
-Therefore the observed correlation of 0.4345602 suggests that there is a positive correlation between genetic distance and geographic distance (and the null hypothesis of no correlation is rejected).
 
 
 **Results from uncleaned dataset:**  
@@ -134,6 +157,46 @@ colnames(x) <- c("Genetic_Distance", "Geographic_Distance")
 library(ggplot2)
 ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05,0.95)) 
 # linear smooth regression line and 5/95 quantile lines added
+```
+
+```{r making pairwise distance summary df}
+getwd()
+specimens <- read.delim("./data/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
+specimens <- as.vector(specimens[,2])
+
+colnames(gen.matrix) <- specimens 
+rownames(gen.matrix) <- specimens # naming the rows and columns by the order given in the SplitsTree output
+
+colnames(geo.matrix) <- data[,1]
+rownames(geo.matrix) <- data[,1] # naming the rows and columns here by the order of lat/long, which came from the data df
+
+dist.summary <- data.frame(
+  col = colnames(gen.matrix)[col(gen.matrix)],
+  row = rownames(gen.matrix)[row(gen.matrix)],
+  gen.dist = c(gen.matrix)
+) # converting the genetic matrix into a df with columns describing which combos result in the distance
+
+x <- data.frame(
+  col = colnames(geo.matrix)[col(geo.matrix)],
+  row = rownames(geo.matrix)[row(geo.matrix)],
+  geo.dist = c(geo.matrix)
+) # doing the same with the geographic matrix
+
+dist.summary <- merge(dist.summary, x, by = 1:2, all = TRUE) # merging the 2 dfs
+rm(x)
+
+dist.summary <- tidyr::unite(dist.summary, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+```
+
+The above df "dist.summary" is not ideal since it's not space efficient (13.6 MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
+
+```{r plots with labels}
+names(dist.summary)
+ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05,0.95)) + geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo),'')), hjust=0, vjust=0)
+
+# + geom_text(hjust=0, vjust=0)
+
+
 ```
 
 

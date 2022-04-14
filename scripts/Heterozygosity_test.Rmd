@@ -1,82 +1,91 @@
 ---
-title: "Heterozygosity_test"
+title: "Testing the Heterozygosity per Island"
 author: "Grace Saville"
 date: "01/02/2022"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
-## Preamble 
+# Preamble 
 
-```{r libraries, eval = FALSE}
+```{r libraries}
 library(stringr)
 library(dplyr)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-## Dataset loading
-```{r eval = FALSE}
-data <- read.csv("./data/ratsSNPs_halfclean.csv") # loading the data table
+# Dataset loading
 
-z <- data # making a copy of the data
-colnames(z)
-z <- z[,-c(2:16)] # removing unnecessary columns for this analysis
+```{r loading data}
+data <- read.csv("./data/ratsSNPs_clean.csv")
+
+copy <- data # making a copy of the data
+colnames(copy)
+copy <- copy[,-c(2:16)] # removing unnecessary columns for this analysis
 ```
 
-## Heterozygosity experimenting
-```{r Setting up data, eval = FALSE}
-dim(z) # 379 rows 283 columns
-str(z)
-unique(unlist(z[,17:283])) # checking what SNP combinations are present
+# Replaces SNP's with symbols for heterozygous and homozygous
+
+```{r Setting up data}
+dim(copy) # 370 rows 283 columns
+str(copy)
+unique(unlist(copy[,17:283])) # checking what SNP combinations are present
 # "?"   "A:A" "G:G" "A:G" "T:T" "A:T" "C:C" "C:T" "T:G" "C:G" "A:C"
 
 het <- c("A:G", "A:T", "C:T", "T:G", "C:G", "A:C") # vector of heterozygous combinations
 hom <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
 
 # Replacing specific combos
-for (i in 1:nrow(z)){
-  z[i,][z[i,] %in% het] <- "E" 
-  z[i,][z[i,] %in% hom] <- "O"
+for (i in 1:nrow(copy)){
+  copy[i,][copy[i,] %in% het] <- "E" 
+  copy[i,][copy[i,] %in% hom] <- "O"
 }
 
-str(z)
-z[z=="?"] <- NA # replacing ? with NA's 
+rm(i)
+
+str(copy)
+copy[copy == "?"] <- NA # replacing ? with NA's 
 ```
 
-```{r homozygous totals per specimen, eval = FALSE}
+# Calculating heterozygous and homozygous totals per specimen
+
+```{r totals per specimen}
 o.freq <- vector()
 e.freq <- vector()
 na.freq <- vector()
-for (i in 1:379) {
-  x <- sum(grepl("O", z[i,], fixed = TRUE)) # counting row O's
+for (i in 1:370) {
+  x <- sum(grepl("O", copy[i,], fixed = TRUE)) # counting row O's
   o.freq <- append(o.freq, x) # adding sum to vector
-  x <- sum(grepl("E", z[i,], fixed = TRUE)) # counting row E's
+  x <- sum(grepl("E", copy[i,], fixed = TRUE)) # counting row E's
   e.freq <- append(e.freq, x)
-  x <- sum(is.na(z[i,])) # counting row NA's
+  x <- sum(is.na(copy[i,])) # counting row NA's
   na.freq <- append(na.freq, x)
   rm(x)
 }
 
-df <- data.frame(z$island, o.freq, e.freq, na.freq) # making a df with the freq totals
+rm(i)
+
+df <- data.frame(copy$island, o.freq, e.freq, na.freq) # making a df with the freq totals
 perc.o <- round(as.vector((df$o.freq / (df$o.freq + df$e.freq)) * 100), digits = 3) # percentage without incl missing
 df$perc.o <- perc.o
 perc.missing <- round(as.vector((df$na.freq / (df$o.freq + df$e.freq + df$na.freq)) * 100), digits = 3) # percentage of missing data in row/specimen
 df$perc.missing <- perc.missing
 
+rm(perc.o, perc.missing)
+
 str(df)
 ```
 
-```{r homozygous total per island, eval = FALSE}
+# Calculating heterozygous and homozygous totals per island
+
+```{r totals per island}
 data <- data[order(data$island, decreasing = FALSE),] # ordering df alphabetically by island
 unique(data$island)
-unique(data$island.1)
-colnames(data)
-data[,c(1,8)][data$island.1 == "Mainland"] # doesn't work
-sum(data$island.1 == "Mainland")
+# sum(data$island.1 == "Mainland")
 shortpopnames <- as.character(c(
   "aotea",
   "borneo",
@@ -109,8 +118,8 @@ shortpopnames <- as.character(c(
 
 # splitting the data df into df objects by island:
 for (i in 1:length(shortpopnames)) {
-  y <- as.vector(grep(shortpopnames[i], z[,1], ignore.case = TRUE, value = FALSE))
-  assign(paste(shortpopnames[i]), z[y,])
+  y <- as.vector(grep(shortpopnames[i], copy[,1], ignore.case = TRUE, value = FALSE))
+  assign(paste(shortpopnames[i]), copy[y,])
 }
 rm(y, i)
 
