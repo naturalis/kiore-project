@@ -1,0 +1,44 @@
+Method for NeighborNet network in SplitsTree
+
+1. I created a Phylip (.phy) file in R using the "NeighborNet_Teebuilding" script on the kiore-project Git Repository.
+	References: Felsenstein, J. (2005). PHYLIP (Phylogeny Inference Package) (3.6). Distributed by the author. https://evolution.genetics.washington.edu/phylip.html
+2. I downloaded and installed SplitsTree4
+	Reference: Huson, D. H., & Bryant, D. (2006). Application of Phylogenetic Networks in Evolutionary Studies. Molecular Biology and Evolution, 23(2), 254–267. https://doi.org/10.1093/molbev/msj030
+2. Opened the .phy file in SplitsTree, selected "protein" when promted the data type (to allow for more symbols than just ATCG)
+3. Saved as .nex file
+	Reference: Maddison DR, Swofford DL, and Maddison WP (1997). NEXUS: An extensible file format for systematic information. Syst Biol 46:590-621
+4. Opened .nex file in text viewer, scrolled to line 382 "datatype = protein" and replaced protein with "dna", and then removed all lines after line 2239 "End CHARACTERS". Saved.
+5. Re-opened in SplitsTree. Under "Distances", selected HKY85 (which now works), and empirical frequencies.
+6. Exported the NeighborNet tree as an image and exported the distance matrix as a tab-delimited text file for use in Mantel test later.
+	Reference: Bryant, D., & Moulton, V. (2004). Neighbor-Net: An Agglomerative Method for the Construction of Phylogenetic Networks. Molecular Biology and Evolution, 21(2), 255–265. https://doi.org/10.1093/molbev/msh018
+7. Opened the exported genetic distances text file and deleted the "distances as column vector" section at the bottom of the file, as well as the title.
+
+
+Method for Hardy-Weinberg Analysis and Structure analysis using programs PGDSpider, Arlequin and STRUCTURE
+
+1. I Cleaned up and reformatted the dataset in RStudio to a CONVERT file format (c.f. Data_cleanup script kiore_project repository)
+	Reference: Glaubitz J.C. (2004) CONVERT: A user-friendly program to reformat diploid genotypic data for commonly used population genetic software packages. Molecular Ecology Notes 4: 309-310.
+2. Downloaded PGDSpider version 2.1.1.5 (May 2018)
+	Reference: Lischer HEL and Excoffier L (2012) PGDSpider: An automated data conversion tool for connecting population genetics and genomics programs. Bioinformatics 28: 298-299.
+3. Opened PGDSpider and selected the following settings:
+	a. Data input file file format: CONVERT; select input file: ratsSNPs_PGDSpyder_input.csv (output from RStudio script stated above)
+	b. Data output file file format: ARLEQUIN; select output file: 
+	c. Convert Select the type of the data: SNP; Apply
+	d. Convert
+4. Repeated the above steps again, except: 
+	a. Data output file file format: STRUCTURE; select output file:
+	b.
+
+At this stage I had an Arlequin input file (*.arp file format) and a STRUCTURE input file (*.str) generated from PGDSpider for use in the Hardy-Weinberg Analysis and the STRUCTURE analysis. Both are on the kiore_project repository.
+
+5. I downloaded Arlequin version 3.5.2.2 (released on 02.08.2015)
+	Reference: Excoffier, L. and H.E. L. Lischer (2010) Arlequin suite ver 3.5: A new series of programs to perform population genetics analyses under Linux and Windows. Molecular Ecology Resources. 10: 564-567.
+6. Opened Arlequin application and applied the settings and procedures as follows:
+	a. File -> Open project -> File: 
+	b. Settings -> General settings -> Polymorhism control Allowed missing level per site: 0.6
+	c. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg equilibrium: check mark
+	d. Start (then upon completion) View Results
+7. Copied the output from the html (or xml) to a text file and saved.
+
+Structure...
+	Reference:
