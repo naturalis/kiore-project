@@ -88,7 +88,7 @@ copy <- unite(copy, bases, -1, sep = "", remove = TRUE) # merging all the base c
 ```
 
 ```{r phylip file creation}
-dat2phylip(copy, outfile = "./data/ratsSNPs_NeighborNet_input.phy") 
+dat2phylip(copy, outfile = "./data/ratsSNPs_SplitsTree_input.phy") 
 # can be opened by splitstree when configured as proteins/amino acids
 ```
 
