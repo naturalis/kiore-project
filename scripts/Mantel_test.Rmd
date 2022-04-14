@@ -28,6 +28,18 @@ gen.dist <- read.delim("./data/geneticdist_SplitsTree_output.txt", sep = "\t", h
 
 # Creating geographical distance matrix
 
+Using the mapview funtion in the last code chunk I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign. Fixing that here:
+```{r longitude adjustment}
+x <- grep("Tahanea", data$island.1, value = FALSE) # finding rows of Tahanea
+names(data) # finding column number for "geo_long"
+data[x, 12]
+data[x, 12] <- -144.97 # replacing the number
+
+write.csv(data, "./data/ratsSNPs_clean.csv", row.names = FALSE)
+```
+
+(only need to do the above code once since it saves the edited df to file)
+
 Different distance functions:
 
 * distHaversine() assumes earth is a sphere
@@ -61,9 +73,24 @@ gen.dist <- as.dist(gen.dist, diag = TRUE, upper = TRUE) # converting to dist ob
 
 ```{r mantel test}
 mantel.rtest(gen.dist, geo.dist, nrepet = 999)
+
 ```
 
-**Results:**  
+**Results:**
+Monte-Carlo test  
+Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
+
+Observation: 0.4991354   
+
+Based on 999 replicates  
+Simulated p-value: 0.001   
+Alternative hypothesis: greater   
+
+Std.Obs: 24.4501375102  
+Expectation: -0.0003790180  
+Variance: 0.0004173817   
+
+**Results before I fixed the missing negative sign in Tahanea longitude:**  
 Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
@@ -110,7 +137,23 @@ ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_poin
 ```
 
 
+# Experimenting with plotting the coordinates on a map
 
+```{r map plotting}
+names(data)
+longlat <- data[,c(1,8,11,12)]
+longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island 
+longlat <- longlat[,-1]
+longlat
+
+library(sf)
+x <- st_as_sf(longlat, coords = c("geo_long", "geo_lat"),  crs = 4326) # 4326 is WGS84 Coordinate Reference System
+
+library(mapview)
+mapview(x, grid = FALSE, map.types = "Esri.WorldGrayCanvas", col.regions = c("red", "grey40", "indianred1", "blue", "grey91", "darkorchid1", "moccasin", "darkorange1", "navy", "goldenrod1", "deeppink", "yellow",  "slategray3", "yellowgreen", "chocolate4", "palegreen", "coral4", "green", "darkmagenta", "seagreen3", "lightsalmon", "darkgreen", "pink", "cyan", "plum", "peru"))
+```
+
+For the code above I would need to find an alternative to mapview because there appears to be a bug where the legend colours don't match up to the map point colours
 
 
 
