@@ -466,7 +466,17 @@ halfclean <- read.csv("./data/ratsSNPs_halfclean.csv")
 # need to remove Kamaka_008, and Rimatuu_19 and Rimatuu_20 due to position in Structure.
 # both the (pre-cleanup) NeighborNet and Structure identify Kayangel17 as concerning, as well as Kayangel11, 13, 15, 19, and 21. HWE shows also several loci in Kayangel as problematic, but not in other popn.s (with 1 exception). Since the loci are only problematic in Kayangel popn., I believe the issue is in the specimens, not the loci themselves.
 
-remove <- c("Kamaka_009", "Rimatuu_19", "Rimatuu_20", "Kayangel11", "Kayangel13", "Kayangel15", "Kayangel17", "Kayangel19", "Kayangel21") # names of specimens to remove (each name should have exactly 10 characters)
+remove <- c(
+    "Kamaka_009",
+    "Rimatuu_19",
+    "Rimatuu_20",
+    "Kayangel11",
+    "Kayangel13",
+    "Kayangel15",
+    "Kayangel17",
+    "Kayangel19",
+    "Kayangel21"
+  ) # names of specimens to remove (each name should have exactly 10 characters)
 x <- sapply(remove, function(i) grep(i, x = halfclean$island, value = FALSE)) # finding the row numbers of the specimens to remove
 halfclean[c(x),1] # checking the names match
 clean <- halfclean[-c(x),] # removing rows described above

@@ -155,7 +155,8 @@ x <- data.frame(as.vector(gen.dist), as.vector(geo.dist))
 colnames(x) <- c("Genetic_Distance", "Geographic_Distance")
 
 library(ggplot2)
-ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05,0.95)) 
+
+ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05, 0.95))
 # linear smooth regression line and 5/95 quantile lines added
 ```
 
@@ -192,7 +193,7 @@ The above df "dist.summary" is not ideal since it's not space efficient (13.6 MB
 
 ```{r plots with labels}
 names(dist.summary)
-ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05,0.95)) + geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo),'')), hjust=0, vjust=0)
+ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05, 0.95)) + geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo), '')), hjust = 0, vjust = 0)
 
 # + geom_text(hjust=0, vjust=0)
 
@@ -213,7 +214,37 @@ library(sf)
 x <- st_as_sf(longlat, coords = c("geo_long", "geo_lat"),  crs = 4326) # 4326 is WGS84 Coordinate Reference System
 
 library(mapview)
-mapview(x, grid = FALSE, map.types = "Esri.WorldGrayCanvas", col.regions = c("red", "grey40", "indianred1", "blue", "grey91", "darkorchid1", "moccasin", "darkorange1", "navy", "goldenrod1", "deeppink", "yellow",  "slategray3", "yellowgreen", "chocolate4", "palegreen", "coral4", "green", "darkmagenta", "seagreen3", "lightsalmon", "darkgreen", "pink", "cyan", "plum", "peru"))
+mapview(
+  x, grid = FALSE, map.types = "Esri.WorldGrayCanvas",
+  col.regions = c(
+    "red",
+    "grey40",
+    "indianred1",
+    "blue",
+    "grey91",
+    "darkorchid1",
+    "moccasin",
+    "darkorange1",
+    "navy",
+    "goldenrod1",
+    "deeppink",
+    "yellow",
+    "slategray3",
+    "yellowgreen",
+    "chocolate4",
+    "palegreen",
+    "coral4",
+    "green",
+    "darkmagenta",
+    "seagreen3",
+    "lightsalmon",
+    "darkgreen",
+    "pink",
+    "cyan",
+    "plum",
+    "peru"
+  )
+)
 ```
 
 For the code above I would need to find an alternative to mapview because there appears to be a bug where the legend colours don't match up to the map point colours

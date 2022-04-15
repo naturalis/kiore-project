@@ -16,7 +16,7 @@ Method for NeighborNet network in SplitsTree
 
 Method for Hardy-Weinberg Analysis and Structure analysis using programs PGDSpider, Arlequin and STRUCTURE
 
-1. I Cleaned up and reformatted the dataset in RStudio to a CONVERT file format (c.f. Data_cleanup script kiore_project repository)
+1. I Cleaned up and reformatted the dataset in RStudio to a CONVERT file format (c.f. Data_cleanup script kiore-project repository)
 	Reference: Glaubitz J.C. (2004) CONVERT: A user-friendly program to reformat diploid genotypic data for commonly used population genetic software packages. Molecular Ecology Notes 4: 309-310.
 2. Downloaded PGDSpider version 2.1.1.5 (May 2018)
 	Reference: Lischer HEL and Excoffier L (2012) PGDSpider: An automated data conversion tool for connecting population genetics and genomics programs. Bioinformatics 28: 298-299.
