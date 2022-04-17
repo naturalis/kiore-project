@@ -263,75 +263,215 @@ getwd()
 write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.names = FALSE)
 ```
 
-# Plots
+# Linear regression and plots
 
 ```{r loading the data again if necessary}
 per.island <- read.csv("./results/heterozygosity_testing_results_table.csv", header = TRUE)
 ```
 
+Issues to consider before/during the statistical analyses:  
 
-```{r plotting}
-names(per.island)
+* Some islands may be outliers because they are based on too few specimens (e.g. due to removal because of too many missing SNPs)
+* Some islands may have specimens that are closely related to each other if they were sampled from the same site therefore may not accurately represent the population
+* Distance from the mainland may not be the best measure because it doesn't indicate the difficultly of reaching the island in all cases, from example Normanby isl. is right next to New Guinea which is very large and likely has a diverse population that can easily move to Normanby and back.
 
-library(ggplot2)
-library(ggrepel)
 
-ggplot(data = per.island, aes(x = km.from.ML, y = perc.o)) + geom_point(size = 2, colour = "red") +   geom_label_repel(aes(label = island), force = 2) +
-  theme_classic()
-```
+## a. Distance
 
-# Linear regression 
-
-```{r linear regression}
-LM <- lm(perc.o ~ km.from.ML, data = per.island)
-summary(LM)
-confint(LM, level = 0.90)
+```{r linear regression with distance}
+LM <- lm(perc.o ~ km.from.ML, data = per.island) # model
+summary(LM) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # diagnostic plots
 ```
 
 **Results:**  
 
-Residuals:  
+> Residuals:  
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:|
 |-14.4165|-1.6867|0.6933|2.6053|9.1871|
 
-Coefficients:  
+> Coefficients:  
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|
 |(Intercept)|8.249e+01|2.156e+00|38.262|< 2e-16 ***|
-|km.from.ML|8.927e-04 (coefficient)|2.470e-04|3.614|0.00139 **|
+|km.from.ML|8.927e-04|2.470e-04|3.614|0.00139 **|
 
-Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
 
-Residual standard error: 5.149 on 24 degrees of freedom  
-Multiple R-squared:  0.3525,	Adjusted R-squared:  0.3255 
+> Residual standard error: 5.149 on 24 degrees of freedom  
+Multiple R-squared:  0.3525  
+Adjusted R-squared:  0.3255   
 F-statistic: 13.06 on 1 and 24 DF,  p-value: 0.001387  
 
-* Higher t-value is generally more significant, related to p-value.  
-* Significant p-value, can reject H0 where x and y are not correlated.
+* Higher t-value is generally more significant, related to p-value.
+* Multiple R-squared indicates ~35% of the variance is explained by the model
+* Significant p-value(s), can reject H0 where x and y are not correlated.
 
-```{r lm plot}
-plot(perc.o ~ km.from.ML, data = per.island)
-abline(coef = coef(LM), col = 4, lwd = 2)
+**Notes on diagnostic plots**
+
+* Residuals vs. Fitted plot shows a line not quite horizontal, but close enough to flat consider the relationship linear. Questionable points: 10 (Kayangel), 18 (New Guinea), 19 (Normanby Island).
+* Normal QQ plot shows residuals generally in line, indicating normality. Questionable points are again: 10 (Kayangel), 18 (New Guinea), 19 (Normanby Island).
+* Scale-Location plot is used to indicate constant residual variance with a line that does not trend up or down overall. Here it may be flat or trend down however it is not entirely clear due to the questionable points (10 (Kayangel), 18 (New Guinea), 19 (Normanby Island)) pulling a section upwards.
+* Residuals vs Leverage (Cook's distance) plot assesses outliers. None of the points are over 1 (Cook's distance line which would make them statistical outliers) nor are any over 0.5 (which would make them questionable). Point 13 (Mainland) has high leverage, however this makes sense because the distance to the Mainland from the Mainland is 0, which is an unusually low number in this model.
+
+```{r lm with distance plot}
+ggplot(data = per.island, aes(x = km.from.ML, y = perc.o)) + 
+  geom_point(colour = "red", size = 3) + 
+  geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
+  ggtitle("Effect of Island distance from Mainland on Homozygosity") +
+  xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
+  theme_light()
 ```
 
+```{r labelled lm with distance plot}
+## making column in df without labels for the points which are within the confidence interval
+x <- predict(LM, interval = "confidence")
+per.island$c <- ifelse(per.island$perc.o < (x[,"upr"]) & per.island$perc.o > x[,"lwr"], "", as.character(per.island$island))
+per.island[3,12] <- "D.S." # making these two names shorter so they don't overlap in the plot
+per.island[23,12] <- "S.I."
 
-```{r linear regression 2}
-LM2 <- lm(perc.o ~ sqrt(area_km2), data = per.island)
+ggplot(per.island, aes(x = km.from.ML, y = perc.o)) +
+  geom_point(size = 3, colour = "red") +
+  geom_smooth(method = 'lm') + 
+  geom_text(aes(label = c), hjust = 0.5, vjust = -0.5) +
+  ggtitle("Effect of Island distance from Mainland on Homozygosity") +
+  xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
+  theme_light()
+```
+
+## b. Area
+
+```{r linear regression with area}
+LM2 <- lm(perc.o ~ log10(area_km2), data = per.island)
 summary(LM2)
-# could try sqrt of the area since there's a cluster of small islands. Bigger islands "squeezed" more than smaller islands so that rations/distances between points are preserved, abline is estimated over than (but if "unsqueezed" the abline would become curved).
-# sqrt relationship might make sense because the effect of islands size decreases as the islands get bigger.
+# trying log10 of the area since there's a cluster of small islands. Bigger islands "squeezed" more than smaller islands so that ratios/distances between points are preserved, abline is estimated over them (but if "unsqueezed" the abline would become curved).
+# log10 relationship might make sense because the effect of islands size decreases as the islands get bigger -> double checked the diagnostics plots without the log transformation and they're very whack so a transformation is indeed a good idea.
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM2) # diagnostic plots
+par(mfrow = c(1, 1))
+MASS::boxcox(LM2) # checking the recommended transformation (on the model w/o a transformation)
 
-plot(perc.o ~ sqrt(area_km2), data = per.island)
+plot(perc.o ~ log10(area_km2), data = per.island)
 abline(coef = coef(LM2), col = 4, lwd = 2)
 ```
 
-```{r linear regression 3}
-LM3 <- lm(perc.o ~ km.from.ML + area_km2, data = per.island)
-summary(LM3)
+**Results:**  
+
+> Call:
+lm(formula = perc.o ~ log10(area_km2), data = per.island)
+
+> Residuals:
+
+|Min|1Q|Median|3Q|Max|
+|:----:|:----:|:----:|:----:|:----:|
+|-11.4512|-1.0882|0.5662|2.0754|8.7053|
+
+> Coefficients:
+
+| |Estimate|Std. Error|t value|p-value|
+|:----:|:----:|:----:|:----:|:----:|
+|(Intercept)|93.1164|1.2963|71.834|< 2e-16 ***|
+|log10(area_km2)|-1.5162|0.4345|-3.489|0.00198 **|
+
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> Residual standard error: 4.649 on 23 degrees of freedom
+  (1 observation deleted due to missingness)
+Multiple R-squared:  0.3461  
+Adjusted R-squared:  0.3177  
+F-statistic: 12.17 on 1 and 23 DF,  p-value: 0.001979
+
+**Notes on diagnostic plots**
+
+* Residuals vs. Fitted plot shows a line not quite horizontal, but close enough to flat consider the relationship linear. Points 3, 18, 19 are more extreme and give the residuals a slight cone shape, indicating potentially non-constant variance!
+* Normal QQ plot shows residuals generally in line, indicating normality. Questionable points are once again: 3, 18, 19
+* Scale-Location plot is used to indicate constant residual variance with a line that does not trend up or down overall. Line trends slightly downwards! Questionable points: 3, 18, 19
+* Residuals vs Leverage (Cook's distance) plot assesses outliers. Point 18 (New Guinea) is over the 0.5 Cook's line and high leverage and therefore is noteworthy. This could be explained by New Guinea being the largest island area in the dataset/model.
+* The Box-Cox plot indicates a transformation to perform and here lambda lines up almost perfectly with 0 == log transformation, which supports the other results.
+
+
+```{r labelled lm2 with area plot}
+x <- as.data.frame(predict(LM2, interval = "confidence"))
+# Next 3 lines are re-adding row 13 NA's (not calculated in the above line) otherwise the names added to per.island$c below will not match up with their corresponding confidence intervals
+x[nrow(x) + 1,] <- NA
+row.names(x)[26.1] <- 13
+x <- x[order(as.numeric(rownames(x))),]
+
+per.island$c <- ifelse(per.island$perc.o < x[,"upr"] & per.island$perc.o > x[,"lwr"], "", as.character(per.island$island))
+
+ggplot(data = per.island, aes(x = log10(area_km2), y = perc.o)) + 
+  geom_point(colour = "red", size = 3) + 
+  geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
+  geom_text(aes(label = c), hjust = 0.5, vjust = -0.8) +
+  ggtitle("Effect of Island Area on Homozygosity") +
+  xlab("log Area of Island (log10 km^2)") + ylab("Homozygosity (%)") +
+  theme_light()
 ```
 
+## c.  Both Distance and Area
 
+```{r assessing lm area ~ distance}
+par(mfrow = c(1, 1))
+testLM <- lm(log(area_km2) ~ km.from.ML, data = per.island)
+plot(log(area_km2) ~ km.from.ML, data = per.island)
+abline(coef = coef(testLM), col = 4, lwd = 2)
+summary(testLM)
+```
+
+The above plots shows that generally the area of the islands decreases with distance (e.g. Borneo and New Guinea are large, Reiono and Tahanea are small) which I believe is a combination of sampling issues and how the islands are naturally on the Pacific. The correlation between these two variables is an issue because I cannot test the affect of each variable compared with each other because their effect is similar (collinearity in this case).
+
+```{r linear regression both distance and area}
+LM3 <- lm(perc.o ~ km.from.ML + log10(area_km2), data = per.island)
+summary(LM3)
+par(mfrow = c(2, 2))
+plot(LM3)
+
+mctest::mctest(LM3) # tests for collinearity (detected but 3/6 tests)
+```
+
+> Call:
+lm(formula = perc.o ~ km.from.ML + log10(area_km2), data = per.island)
+
+> Residuals:  
+
+|Min|1Q|Median|3Q|Max|
+|:----:|:----:|:----:|:----:|:----:|
+|-11.9825|-1.3484|0.6022|1.9063|7.5237|
+
+> Coefficients:  
+
+| |Estimate|Std. Error|t value|p-value|
+|:----:|:----:|:----:|:----:|:----:|
+|(Intercept)|89.9723695|3.6496351|24.652|<2e-16 ***|
+|km.from.ML|0.0002988|0.0003241|0.922|0.3665|    
+|log10(area_km2)|-1.1566839|0.5848702|-1.978|0.0606 .|
+   
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> Residual standard error: 4.664 on 22 degrees of freedom
+  (1 observation deleted due to missingness)  
+Multiple R-squared:  0.3704  
+Adjusted R-squared:  0.3132  
+F-statistic: 6.473 on 2 and 22 DF,  p-value: 0.006157
+
+* 25 observations - 3 parameters = 22 degrees of freedom
+* The R^2 value indicates that only 37% of the variance is explained (31% when considering the extra parameter added (adjusted R^2), however this is not particularly different from the R^2adj of the other 2 models)
+* The f-test is significant, therefore the the model explains a significant amount of variance
+* The diagnostics for this model do not appear different from the diagnostics of the above 2 models
+
+```{r combo plot}
+ggplot(data = per.island, aes(x = km.from.ML, y = perc.o)) + 
+  geom_point(mapping = aes(colour = log10(area_km2)), size = 3) + 
+  geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
+  scale_color_gradient(low = "red", high = "blue") +
+  ggtitle("Effect of Island distance from Mainland on Homozygosity, including island area") +
+  xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
+  theme_light()
+
+# fix legend title and labels
+```
 

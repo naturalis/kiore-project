@@ -99,16 +99,17 @@ mantel.rtest(gen.dist, geo.dist, nrepet = 999)
 ```
 
 **Results:**
-Monte-Carlo test  
+
+> Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
-Observation: 0.4987612   
+> Observation: 0.4987612   
 
-Based on 999 replicates  
+> Based on 999 replicates  
 Simulated p-value: 0.001   
 Alternative hypothesis: greater   
 
-Std.Obs: 23.7703702908  
+> Std.Obs: 23.7703702908  
 Expectation: -0.0004626768  
 Variance: 0.0004410815 
 
@@ -119,32 +120,34 @@ Variance: 0.0004410815
 Therefore the observed correlation of 0.4987612 suggests that there is a positive correlation between genetic distance and geographic distance (and the null hypothesis of no correlation is rejected).
       
 
-**Results before I fixed the missing negative sign in Tahanea and other location issues:**  
-Monte-Carlo test  
+**Results before I fixed the missing negative sign in Tahanea and other location issues:**
+
+> Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
-Observation: 0.4345602   
+> Observation: 0.4345602   
 
-Based on 999 replicates  
+> Based on 999 replicates  
 Simulated p-value: 0.001   
 Alternative hypothesis: greater   
 
-Std.Obs: 2.329675e+01   
+> Std.Obs: 2.329675e+01   
 Expectation: 7.916798e-04     
 Variance: 3.466772e-04  
 
 
-**Results from uncleaned dataset:**  
-Monte-Carlo test  
+**Results from uncleaned dataset:** 
+
+> Monte-Carlo test  
 Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
 
-Observation: 0.2807331
+> Observation: 0.2807331
 
-Based on 99 replicates  
+> Based on 99 replicates  
 Simulated p-value: 0.01  
 Alternative hypothesis: greater   
 
-Std.Obs: 26.5367570885  
+> Std.Obs: 26.5367570885  
 Expectation: -0.0002961658  
 Variance: 0.0001121521  
 
@@ -156,7 +159,10 @@ colnames(x) <- c("Genetic_Distance", "Geographic_Distance")
 
 library(ggplot2)
 
-ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05, 0.95))
+ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + 
+  geom_point(shape = 1, colour = "grey") + 
+  geom_smooth(method = "lm") + 
+  geom_quantile(quantiles = c(0.05, 0.95))
 # linear smooth regression line and 5/95 quantile lines added
 ```
 
@@ -193,7 +199,11 @@ The above df "dist.summary" is not ideal since it's not space efficient (13.6 MB
 
 ```{r plots with labels}
 names(dist.summary)
-ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + geom_point(shape = 1, colour = "grey") + geom_smooth(method = "lm") + geom_quantile(quantiles = c(0.05, 0.95)) + geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo), '')), hjust = 0, vjust = 0)
+ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + 
+  geom_point(shape = 1, colour = "grey") + 
+  geom_smooth(method = "lm") + 
+  geom_quantile(quantiles = c(0.05, 0.95)) + 
+  geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo), '')), hjust = 0, vjust = 0)
 
 # + geom_text(hjust=0, vjust=0)
 
