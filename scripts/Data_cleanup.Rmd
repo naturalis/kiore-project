@@ -319,9 +319,6 @@ rm(i1, i2, foo, popnames, pops)
 rm(list = c(letters[seq(from = 1, to = 23)], "y", "z")) # removing excess objects
 ```
 
-- check which specimens will be in the mainland popn. (e.g. luzon, also Borneo and Sulawesi), and if populations w 1 specimen are viable (e.g. doubtful sound and great mercury isl.)
-
-
 # HWE Analysis and removal
 
 ### Creating loop for reading the HWE files
@@ -463,7 +460,7 @@ plyr::count(hwe.signif$islandpop) # concerning that 17 of 23 are Kayangel
 getwd()
 halfclean <- read.csv("./data/ratsSNPs_halfclean.csv")
 
-# need to remove Kamaka_008, and Rimatuu_19 and Rimatuu_20 due to position in Structure.
+# need to remove Kamaka_009, and Rimatuu_19 and Rimatuu_20 due to position in Structure.
 # both the (pre-cleanup) NeighborNet and Structure identify Kayangel17 as concerning, as well as Kayangel11, 13, 15, 19, and 21. HWE shows also several loci in Kayangel as problematic, but not in other popn.s (with 1 exception). Since the loci are only problematic in Kayangel popn., I believe the issue is in the specimens, not the loci themselves.
 
 remove <- c(
