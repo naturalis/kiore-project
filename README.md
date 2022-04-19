@@ -7,21 +7,21 @@ Understanding Evolution, Naturalis Biodiversity Center
 ### Repo Contents: 
 Files are generally sorted by promgram (e.g. Arlequin) or method (e.g. Mantel test). 
 
-#### 1. data:
+#### data:
 This folder contains raw data files, cleaned data files, program-specific formatting files and programme log files.
 
-a. Arlequin
+1. Arlequin
 	- ratsSNPs_arl_input.arp
-b. PGDSpider
+2. PGDSpider
 	- PGDSpider_log.spid
 	- ratsSNPs_PGDSpider_input.txt
-c. RStudio
+3. RStudio
 	- ratsSNPs_halfclean.csv
 	- ratsSNPs_clean.csv
-d. Raw_data
+4. Raw_data
 	- Genotyping-007.010-01_SNP_Raw_data.tsv                         
 	- island_size_data.csv                                            
-e. SplitsTree
+5. SplitsTree
 	- geneticdist_splitstree_output.txt                    
 	- geneticdist_SplitsTree_output_taxa_only.txt          
 	- geneticdist_SplitsTree_output_taxa_only_UNCLEANED.txt
@@ -30,12 +30,12 @@ e. SplitsTree
 	- ratsSNPs_SplitsTree_input.phy.nex                   
 	- ratsSNPs_SplitsTree_input_UNCLEANED.phy             
 	- ratsSNPs_SplitsTree_input_UNCLEANED.phy.nex
-f. STRUCTURE 
+6. STRUCTURE 
 	- ratsSNPs_Structure_input_preHWE
 
-#### 2. results:
+#### results:
 
-a. Arlequin_HardyWeiberg
+1. Arlequin_HardyWeiberg
 	- Arlequin_log.txt
 	- hwe_allresults_14032022.txt      
 	- hwe_results_by_island_14032022
@@ -45,18 +45,18 @@ a. Arlequin_HardyWeiberg
 	- ratsSNPs_arl_input.xml
 	- ratsSNPs_arl_input_main.htm      
 	- ratsSNPs_arl_input_tree.htm
-b. RStudio_Heterozygosity
+2. RStudio_Heterozygosity
 	- heterozygosity_testing_results_table.csv
-c. RStudio_Mantel_Test_&_Distances
+3. RStudio_Mantel_Test_&_Distances
 	- distance_matrices_plot.png                         
 	- distance_matrices_plot_PRECLEANUP.jpg              
 	- distance_matrices_quantilelines_plot.png           
 	- distance_matrices_quantilelines_plot_PRECLEANUP.jpg
-d. SplitsTree_NeighborNet
+4. SplitsTree_NeighborNet
 	- NeighborNet_clean_broad.png
 	- NeighborNet_clean_detailled.png
 	- NeighborNet_PRECLEANUP.png
-e. STRUCTURE
+5. STRUCTURE
 	- as_pdf
 		- mainparams and extraparams
 		- PlotData
@@ -64,7 +64,7 @@ e. STRUCTURE
 		- Results_compressed.zip
 	- project_data
 	- ratsSNPs_struc_preHWE.spj
-f. StructureHarvester
+6. StructureHarvester
 	- deltaK.eps, .pdf and .png
 	- evannoTable.tab
 	- Kn.indfile and .popfile   
@@ -74,10 +74,10 @@ f. StructureHarvester
 	- rawSummary.tab
 	- summary.html
 
-#### 3. scripts:
+#### scripts:
 This folder contains the R scripts (and pdf versions) used to clean the data and run analyses. The clean-up steps involved removing rows and columns with high % missing values, file conversion in PGDSpider, a Hardy-Weinberg Equilibrium test in Arlequin, and a Structure analysis in STRUCTURE.
 
-a. Data_cleanup.Rmd and .pdf: To make the raw data ready for analysis I...  
+1. Data_cleanup.Rmd and .pdf: To make the raw data ready for analysis I...  
 	- Removed SNP columns which had no variation (invariant/monomorphic)  
 	- Removed SNP columns with more than 60% missing values  
 	- Removed specimen rows with more than 56% missing values (leaving a dataset which was/is at least 90% complete)  
@@ -86,9 +86,9 @@ a. Data_cleanup.Rmd and .pdf: To make the raw data ready for analysis I...
 	- Checked the HWE p-values and ran a Bonferroni test  
 	- Removed samples with issues identified by the HWE analysis  
 	- Double checked for monomorphic SNP columns  
-b. NeighborNet_Treebuilding.Rmd and .pdf: Created a file to open in SplitsTree, in order to generate a NeighborNet network and export a genetic distance matrix.
-c. Mantel_test.Rmd and .pdf: Generated a geographical distance matrix of distances between all islands where Pacific rats were sampled. Loaded the genetic distance matrix produced in SplitsTree and then used both matrices to run a Mantel test.
-d. Heterozygosity_test.Rmd and .pdf: 
+2. NeighborNet_Treebuilding.Rmd and .pdf: Created a file to open in SplitsTree, in order to generate a NeighborNet network and export a genetic distance matrix.
+3. Mantel_test.Rmd and .pdf: Generated a geographical distance matrix of distances between all islands where Pacific rats were sampled. Loaded the genetic distance matrix produced in SplitsTree and then used both matrices to run a Mantel test.
+4. Heterozygosity_test.Rmd and .pdf: 
 
 ____
 
