@@ -1,0 +1,194 @@
+Log file path: C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/Arlequin/ratsSNPs_arl_input_CLEAN.res/Arlequin_log.txt
+Core Program Directory: C:/Users/airhe/Downloads/WinArl35/
+Random number generator initialized with lidum=-1097742
+Reading project profile section...
+done !
+Opening next project...
+C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/Arlequin/ratsSNPs_arl_input_CLEAN.arp
+////////////////////////////////////////////////////////////////////
+RUN NUMBER 1 (26/04/22 at 14:02:12)
+////////////////////////////////////////////////////////////////////
+
+
+Reading Project: 
+Reading input file ...
+	Reading Samples section ...
+	Reading Aotea ... 
+	done ! (0 ms)
+
+	Reading Borneo ... 
+	done ! (0 ms)
+
+	Reading Doubtful_Sound ... 
+	done ! (0 ms)
+
+	Reading Great_Mercury_Island ... 
+	done ! (0 ms)
+
+	Reading Halmahera ... 
+	done ! (0 ms)
+
+	Reading Hatutaa ... 
+	done ! (0 ms)
+
+	Reading Honuea ... 
+	done ! (0 ms)
+
+	Reading Kaikura_Island ... 
+	done ! (0 ms)
+
+	Reading Kamaka ... 
+	done ! (0 ms)
+
+	Reading Kayangel ... 
+	done ! (0 ms)
+
+	Reading Late_Island ... 
+	done ! (0 ms)
+
+	Reading Mainland ... 
+	done ! (0 ms)
+
+	Reading Malenge ... 
+	done ! (0 ms)
+
+	Reading Mohotani ... 
+	done ! (0 ms)
+
+	Reading Motukawanui ... 
+	done ! (16 ms)
+
+	Reading New_Britain ... 
+	done ! (0 ms)
+
+	Reading New_Guinea ... 
+	done ! (0 ms)
+
+	Reading Normanby_Island ... 
+	done ! (0 ms)
+
+	Reading Rakiura ... 
+	done ! (0 ms)
+
+	Reading Reiono ... 
+	done ! (0 ms)
+
+	Reading Rimatuu ... 
+	done ! (0 ms)
+
+	Reading Slipper_Island ... 
+	done ! (0 ms)
+
+	Reading Sulawesi ... 
+	done ! (0 ms)
+
+	Reading Tahanea ... 
+	done ! (0 ms)
+
+	Reading Wake_Island ... 
+	done ! (0 ms)
+
+	done reading Samples section! (16 ms)
+done ! (16 ms)
+
+------------------------------------------------------------------------
+  Checking all selected options...
+		Building vectors of alleles...
+		done in 0 ms
+  done!
+  check selected settings...
+  done!
+
+Population 'Aotea' : 
+done in 0 ms
+
+Population 'Borneo' : 
+done in 0 ms
+
+Population 'Doubtful_Sound' : 
+done in 0 ms
+
+Population 'Great_Mercury_Island' : 
+done in 0 ms
+
+Population 'Halmahera' : 
+done in 0 ms
+
+Population 'Hatutaa' : 
+done in 0 ms
+
+Population 'Honuea' : 
+done in 0 ms
+
+Population 'Kaikura_Island' : 
+done in 0 ms
+
+Population 'Kamaka' : 
+done in 0 ms
+
+Population 'Kayangel' : 
+done in 0 ms
+
+Population 'Late_Island' : 
+done in 0 ms
+
+Population 'Mainland' : 
+done in 0 ms
+
+Population 'Malenge' : 
+done in 0 ms
+
+Population 'Mohotani' : 
+done in 0 ms
+
+Population 'Motukawanui' : 
+done in 0 ms
+
+Population 'New_Britain' : 
+done in 0 ms
+
+Population 'New_Guinea' : 
+done in 0 ms
+
+Population 'Normanby_Island' : 
+done in 0 ms
+
+Population 'Rakiura' : 
+done in 0 ms
+
+Population 'Reiono' : 
+done in 0 ms
+
+Population 'Rimatuu' : 
+done in 0 ms
+
+Population 'Slipper_Island' : 
+done in 0 ms
+
+Population 'Sulawesi' : 
+done in 0 ms
+
+Population 'Tahanea' : 
+done in 0 ms
+
+Population 'Wake_Island' : 
+done in 0 ms
+	Converting phenotypic to haplotypic data ...
+	done ! (18 ms)
+			Beginning distance computations ...
+			done ! (449 ms)
+	Computing pairwise Fst's ... 
+
+4343 ms to compute pairwise differences and test significance
+
+All FST distances have been computed and written to file
+
+	done ! (4359 ms)
+		done ! (4359 ms)
+
+////////////////////////////////////////////////////////////////////
+END OF RUN NUMBER 1 (26/04/22 at 14:02:16))
+Total computing time for this run : 0h 0m 4s 892 ms
+////////////////////////////////////////////////////////////////////
+
+Successful run of C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project/data/Arlequin/ratsSNPs_arl_input_CLEAN.arp

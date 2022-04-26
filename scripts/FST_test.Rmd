@@ -1,0 +1,214 @@
+---
+title: "FST_prep_and_analysis"
+author: "Grace Saville"
+date: "26/04/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+# Preamble 
+
+```{r libraries}
+library()
+library()
+getwd()
+setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+```
+
+# Prepping df
+
+```{r loading data}
+# load(".RData") # if necessary
+data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
+```
+
+```{r SNP column separation}
+copy <- data # making a copy
+copy[1,1:20] # checking column names
+copy <- copy[,-c(2:16)] # removing all but specimen names and SNPs
+copy[1,1:20] # checking
+
+copy[copy == "?"] <- "?:?" # replacing single ? with double ? so alleles can be split
+
+x <- data.frame(island = copy$island) # setting up new df for for loop
+coln <- as.vector(colnames(copy)) # prepping to paste the column names into the for loop
+dim(copy) # 379 rows 283 columns
+for (i in 2:283) {
+  y <- colsplit(copy[,i], split = ":", names = c(coln[i], paste("blank", i, sep = "."))) # splitting each i column and renaming them 
+  x <- cbind(x, y) # combining output with current df
+  rm(i, y) # removing temp objects
+}
+
+# Checking:
+# dim(x3) # 379 rows 565 columns
+# x2[1:5,1:5] 
+# x3[1:5,1:5] # comparing the 2 dfs to check the column naming worked correctly
+
+copy <- x
+rm(x, coln) # removing excess objects
+```
+
+### Producing the file necessary for PGDSpider program
+
+```{r file prep}
+copy <- copy[order(copy$island, decreasing = FALSE), ] # ordering df alphabetically by island
+print(as.matrix(copy[, 1])) # printing the island names and row numbers
+
+# A=1, T=2, G=3, C=4
+copy[copy == "A"] <- "1"
+copy[copy == "T"] <- "2"
+copy[copy == "G"] <- "3"
+copy[copy == "C"] <- "4"
+
+# row numbers in dataset df listed below for each popn.
+popnames <- as.character(
+  c(
+    "pop = Aotea", # 1:10
+    "pop = Borneo", # 11:28
+    "pop = Doubtful_Sound", # 306
+    "pop = Great_Mercury_Island", # 30
+    "pop = Halmahera", # 31:42
+    "pop = Hatutaa", # 43:63
+    "pop = Honuea", # 64:83
+    "pop = Kaikura_Island", # 84:103
+    "pop = Kamaka", # 104:123
+    "pop = Kayangel", # 124:138
+    "pop = Late_Island", # 141:161
+    "pop = Mainland", # 29, 139, 140, 162, 349, 350 (including Luzon here)
+    "pop = Malenge", # 163:174
+    "pop = Mohotani", # 175:188
+    "pop = Motukawanui", # 189:209
+    "pop = New_Britain", # 210:219
+    "pop = New_Guinea", # 220:221
+    "pop = Normanby_Island", # 223
+    "pop = Rakiura", # 224:244
+    "pop = Reiono", # 245:265
+    "pop = Rimatuu", # 266:284
+    "pop = Slipper_Island", # 285:305
+    "pop = Sulawesi", # 307:328
+    "pop = Tahanea", # 329:348
+    "pop = Wake_Island" # 351:370
+  )
+)
+
+# Creating population dfs
+a <- as.data.frame(copy[1:10,]) # Aotea
+b <- as.data.frame(copy[11:28,]) # Borneo
+c <- as.data.frame(copy[306,]) # Doubtful_Sound
+d <- as.data.frame(copy[30,]) # Great_Mercury_Island
+e <- as.data.frame(copy[31:42,]) # Halmahera
+f <- as.data.frame(copy[43:63,]) # Hatutaa
+g <- as.data.frame(copy[64:83,]) # Honuea
+h <- as.data.frame(copy[84:103,]) # Kaikura_Island
+i <- as.data.frame(copy[104:123,]) # Kamaka
+j <- as.data.frame(copy[124:138,])  # Kayangel
+k <- as.data.frame(copy[141:161,]) # Late_Island
+l <- as.data.frame(copy[c(29, 139, 140, 162, 349, 350),]) # Mainland
+m <- as.data.frame(copy[163:174,]) # Malenge
+n <- as.data.frame(copy[175:188,]) # Mohotani
+o <- as.data.frame(copy[189:209,]) #  Motukawanui
+p <- as.data.frame(copy[210:219,]) #  New_Britain
+q <- as.data.frame(copy[220:221,]) # New_Guinea
+r <- as.data.frame(copy[223,]) #  Normanby_Island
+s <- as.data.frame(copy[224:244,]) # Rakiura
+t <- as.data.frame(copy[245:265,]) # Reiono
+u <- as.data.frame(copy[266:284,]) # Rimatuu
+v <- as.data.frame(copy[285:305,]) # Slipper_Island
+w <- as.data.frame(copy[307:328,]) #  Sulawesi
+x <- as.data.frame(copy[329:348,]) # Tahanea
+y <- as.data.frame(copy[351:370,]) # Wake_Island
+
+pops <- as.character(c(letters[seq(from = 1, to = 25)])) # list of popn object names
+```
+
+```{r writing to file}
+ncol(copy) #565
+getwd()
+
+sink("./data/PGDSpider/ratsSNPs_PGDSpider_input_CLEAN.txt") # create empty file
+cat("rats_SNPS", "npops = 25", "nloci = 282", fill = 1)
+cat("\t", fill = FALSE)
+cat(colnames(copy[,c(FALSE,TRUE)]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names (even columns only)
+for (i1 in 1:25) {
+  cat(popnames[i1], fill = 1) # island name
+  foo <- get(pops[i1]) # calling the island object based on the pops vector
+  for (i2 in 1:nrow(foo)) {
+    cat(as.character(foo[i2, ]), "\n", fill = FALSE, sep = "\t") # printing the SNP rows
+  } # inner loop close
+} # outer loop close
+sink() # closing the sink connection (do not forget!)
+
+rm(i1, i2, foo, popnames, pops)
+rm(list = c(letters[seq(from = 1, to = 25)])) # removing excess objects
+```
+
+
+### Analysis
+
+```{r}
+popnames <- as.character(
+  c(
+    "Aotea",
+    "Borneo",
+    "Doubtful_Sound",
+    "Great_Mercury_Island",
+    "Halmahera",
+    "Hatutaa",
+    "Honuea",
+    "Kaikura_Island",
+    "Kamaka",
+    "Kayangel",
+    "Late_Island",
+    "Mainland", # (inc Luzon here)
+    "Malenge",
+    "Mohotani",
+    "Motukawanui",
+    "New_Britain",
+    "New_Guinea",
+    "Normanby_Island",
+    "Rakiura",
+    "Reiono",
+    "Rimatuu",
+    "Slipper_Island",
+    "Sulawesi",
+    "Tahanea",
+    "Wake_Island" 
+  )
+)
+
+pwd <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_only.csv", header = TRUE)
+pv <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_pvalues_only.csv", header = TRUE)
+colnames(pwd) <- popnames
+rownames(pwd) <- popnames
+pwd <- as.matrix(pwd)
+colnames(pv) <- popnames
+rownames(pv) <- popnames
+pv <- as.matrix(pv)
+
+x <- t(pwd) # transposed copy
+pwd[upper.tri(pwd, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)] # making full matrix (not just lower tri)
+x <- t(pv) # transposed copy for p-values
+pv[upper.tri(pv, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)]
+```
+
+```{r correlogram}
+library(corrplot)
+corrplot(pwd, 
+         method = "color", 
+         type = "lower", # which triangle
+         tl.col = "black", # text colour
+         order = "FPC",
+         diag = FALSE,
+         p.mat = pv, # links to p-value matrix
+         sig.level = 0.05,
+         insig = "pch", # what to do with insignificant p-values
+         col.lim = c(-0.4, 1),
+         col = RColorBrewer::brewer.pal(n = 10, name = "Spectral") # colour palette
+         )
+```
+
+
+
