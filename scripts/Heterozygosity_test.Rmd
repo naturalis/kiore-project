@@ -21,7 +21,7 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 # Dataset loading
 
 ```{r loading data}
-data <- read.csv("./data/ratsSNPs_clean.csv")
+data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 
 copy <- data # making a copy of the data
 colnames(copy)
@@ -266,7 +266,7 @@ write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.
 # Linear regression and plots
 
 ```{r loading the data again if necessary}
-per.island <- read.csv("./results/heterozygosity_testing_results_table.csv", header = TRUE)
+per.island <- read.csv("./results/RStudio_Heterozygosity/heterozygosity_testing_results_table.csv", header = TRUE)
 ```
 
 Issues to consider before/during the statistical analyses:  
@@ -422,7 +422,7 @@ abline(coef = coef(testLM), col = 4, lwd = 2)
 summary(testLM)
 ```
 
-The above plots shows that generally the area of the islands decreases with distance (e.g. Borneo and New Guinea are large, Reiono and Tahanea are small) which I believe is a combination of sampling issues and how the islands are naturally on the Pacific. The correlation between these two variables is an issue because I cannot test the affect of each variable compared with each other because their effect is similar (collinearity in this case).
+The above plot shows that generally the area of the islands decreases with distance (e.g. Borneo and New Guinea are large, Reiono and Tahanea are small) which I believe is a combination of sampling issues and how the islands are naturally on the Pacific. The correlation between these two variables is an issue with only simple linear models because I cannot test the affect of each variable compared with each other because their effect is similar (collinearity in this case).
 
 ```{r linear regression both distance and area}
 LM3 <- lm(perc.o ~ km.from.ML + log10(area_km2), data = per.island)
@@ -462,6 +462,16 @@ F-statistic: 6.473 on 2 and 22 DF,  p-value: 0.006157
 * The R^2 value indicates that only 37% of the variance is explained (31% when considering the extra parameter added (adjusted R^2), however this is not particularly different from the R^2adj of the other 2 models)
 * The f-test is significant, therefore the the model explains a significant amount of variance
 * The diagnostics for this model do not appear different from the diagnostics of the above 2 models
+
+```{r glm}
+
+
+
+```
+
+
+
+
 
 ```{r combo plot}
 ggplot(data = per.island, aes(x = km.from.ML, y = perc.o)) + 

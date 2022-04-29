@@ -12,8 +12,9 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 # Preamble 
 
 ```{r libraries}
-library()
-library()
+library(corrplot)
+library(ggplot2)
+library(tidyr)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
@@ -148,7 +149,9 @@ rm(list = c(letters[seq(from = 1, to = 25)])) # removing excess objects
 
 ### Analysis
 
-```{r}
+#### Loading the results files 
+
+```{r loading results files}
 popnames <- as.character(
   c(
     "Aotea",
@@ -194,8 +197,170 @@ x <- t(pv) # transposed copy for p-values
 pv[upper.tri(pv, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)]
 ```
 
+#### Creating results df on which to base analyses
+
+```{r fst df}
+pwd.df <- pwd
+pwd.df[lower.tri(pwd.df, diag = TRUE)] <- NA # keeping only the upper triangle of each matrix
+
+pwd.df <- data.frame(
+  col = colnames(pwd.df)[col(pwd.df)],
+  row = rownames(pwd.df)[row(pwd.df)],
+  fst.dist = c(pwd.df)
+) # converting the fst matrix into a df with columns describing which combos result in the distance
+
+pwd.df <- na.omit(pwd.df)
+
+pwd.df <- unite(pwd.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+```
+
+```{r making geographic distance matrix}
+longlat <- data[,c(8,11,12)]
+longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island
+longlat <- longlat[order(longlat$island.1, decreasing = FALSE),] # sorting alphabetically
+row.names(longlat) <- seq(nrow(longlat)) # renaming row numbers to be sequential
+longlat # checking
+
+# editing the names to match those in the pwd df so I can merge them later
+longlat[1,1] <- "Aotea"
+longlat[3,1] <- "Doubtful_Sound"
+longlat[4,1] <- "Great_Mercury_Island"
+longlat[8,1] <- "Kaikura_Island"
+longlat[11,1] <- "Late_Island"
+longlat[17,1] <- "New_Britain"
+longlat[18,1] <- "New_Guinea"
+longlat[19,1] <- "Normanby_Island"
+longlat[20,1] <- "Rakiura"
+longlat[22,1] <- "Rimatuu"
+longlat[23,1] <- "Slipper_Island"
+longlat[26,1] <- "Wake_Island"
+
+
+geo.matrix <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+
+geo.matrix <- distm(geo.matrix, fun = distGeo) # converting to pairwise distance matrix
+dim(geo.matrix) # 26 26
+```
+
+```{r adding geo distances to fst df}
+colnames(geo.matrix) <- longlat[,1]
+rownames(geo.matrix) <- longlat[,1] # naming the rows and columns
+
+geo.matrix[lower.tri(geo.matrix, diag = TRUE)] <- NA # keeping only the upper triangle of matrix
+
+geo.df <- data.frame(
+  col = colnames(geo.matrix)[col(geo.matrix)],
+  row = rownames(geo.matrix)[row(geo.matrix)],
+  geo.dist = c(geo.matrix)
+) # converting the genetic matrix into a df with columns describing which combos result in the distance
+
+geo.df <- na.omit(geo.df) # removing NA's left from lower triangle
+
+geo.df <- unite(geo.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+
+pwd.df <- merge(pwd.df, geo.df, by = "islands.combo", all = FALSE) # merging distance between islands with FST df
+
+pwd.df$geo.dist <- pwd.df$geo.dist/1000 # going from metres to km
+
+rm(longlat, geo.matrix, geo.df)
+```
+
+#### Linear modelling
+
+```{r linear model}
+LM <- lm(fst.dist ~ geo.dist, data = pwd.df) # model
+summary(LM) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # diagnostic plots
+
+car::outlierTest(LM) # no. 148 most extreme
+pwd.df[148,] # Normandy Is:Mainland, FST -0.33292
+
+car::ncvTest(LM) # homoscedasticity test
+# Chisquare = 12.31918, Df = 1, p = 0.00044833, H0 of constant variance is rejected
+
+par(mfrow = c(1, 1))
+plot(fst.dist ~ geo.dist, data = pwd.df)
+abline(coef = coef(LM), col = 4, lwd = 2)
+```
+
+**Results:**
+
+> Call:
+lm(formula = fst.dist ~ geo.dist, data = pwd.df)
+
+> Residuals:
+
+|Min|1Q|Median|3Q|Max|
+|:----:|:----:|:----:|:----:|:----:| 
+|-0.80573|-0.08944|0.00017|0.11193|0.37928|
+
+> Coefficients:
+
+| |Estimate|Std. Error|t value|p-value|
+|:----:|:----:|:----:|:----:|:----:|    
+|(Intercept)|3.531e-01|1.842e-02|19.172|< 2e-16 \*\*\*|
+|geo.dist|2.096e-05|2.985e-06|7.021|1.5e-11 \*\*\*|
+
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘\*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> Residual standard error: 0.1626 on 298 degrees of freedom  
+Multiple R-squared:  0.1419  
+Adjusted R-squared:  0.1391   
+F-statistic: 49.29 on 1 and 298 DF,  p-value: 1.496e-11
+
+* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot therefore non-constant variance, and although 148 is far apart it is not above cook's distance and not high leverage.
+
+
+```{r testing lm without negative fst values}
+x <- pwd.df[pwd.df$fst.dist >= 0,]
+
+LM2 <- lm(fst.dist ~ geo.dist, data = x) # model
+summary(LM2) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM2) # diagnostic plots: non-constant variance!
+
+par(mfrow = c(1, 1))
+plot(fst.dist ~ geo.dist, data = x)
+abline(coef = coef(LM2), col = 4, lwd = 2)
+
+car::ncvTest(LM2) # homoscedasticity test
+# Chisquare = 16.78224, Df = 1, p = 0.000041924, H0 of constant variance is rejected
+MASS::boxcox(LM2) # original values likely produce the best fit
+```
+
+**Results:**
+
+> Call:
+lm(formula = fst.dist ~ geo.dist, data = x)
+
+> Residuals:
+
+|Min|1Q|Median|3Q|Max|
+|:----:|:----:|:----:|:----:|:----:| 
+|-0.40541|-0.09238|-0.00324|0.10726|0.37482| 
+
+> Coefficients:
+
+| |Estimate|Std. Error|t value|p-value|
+|:----:|:----:|:----:|:----:|:----:|    
+|(Intercept)|3.573e-01|1.731e-02|20.641|< 2e-16 \*\*\*|
+|geo.dist|2.104e-05|2.804e-06|7.506|7.22e-13 \*\*\*|
+
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> Residual standard error: 0.1527 on 296 degrees of freedom  
+Multiple R-squared:  0.1599  
+Adjusted R-squared:  0.157   
+F-statistic: 56.33 on 1 and 296 DF,  p-value: 7.222e-13
+
+* Diagnostic Plots: indicates linear relationship, normal distribution of residuals, non-constant variance (more visible than LM 1), and nosignificant (or high leverage) outliers.
+
+### Plots 
+
 ```{r correlogram}
 library(corrplot)
+par(mfrow = c(1, 1))
 corrplot(pwd, 
          method = "color", 
          type = "lower", # which triangle
@@ -208,7 +373,21 @@ corrplot(pwd,
          col.lim = c(-0.4, 1),
          col = RColorBrewer::brewer.pal(n = 10, name = "Spectral") # colour palette
          )
+mtext("Correlogram of FST values between Islands", at = 10, line = -5, cex = 1.3) # at = horizontal, line = height, cex = size
 ```
 
+From 0 to 1: 0 implying free interbreeding, 1 means the popn.s don't interbreed
+"Values for mammal populations between subspecies, or closely related species, typical values are of the order of 5% to 20%"
+
+```{r ggplot}
+ggplot(data = x, aes(x = geo.dist, y = fst.dist)) + 
+  geom_point(shape = 1, colour = "black") + 
+  geom_smooth(method = "lm", se = TRUE) + 
+  ggtitle("Correlation between FST and Geographic Distance between Islands") +
+  xlab("Geographic Distance between 2 islands (km)") + ylab("FST Distance between 2 islands") +
+  theme_light()
+```
+
+The two negative values may be due to low sample size (could be outliers). FST is usually between 0 and 1. The negative values are also identified and non-significant.
 
 

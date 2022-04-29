@@ -21,15 +21,15 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 # Loading the data
 
 ```{r data loading}
-data <- read.csv("./data/ratsSNPs_clean.csv")
+data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 dim(data) # 370 rows 298 columns
 str(data)
 ```
 
-# Testing the dat2phylip function
+# Testing the dat2phylip() function
 ```{r testing}
-x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
-dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
+# x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
+# dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
 ```
 
 After some experimenting, for Phylip files...
@@ -88,7 +88,7 @@ copy <- unite(copy, bases, -1, sep = "", remove = TRUE) # merging all the base c
 ```
 
 ```{r phylip file creation}
-dat2phylip(copy, outfile = "./data/ratsSNPs_SplitsTree_input.phy") 
+dat2phylip(copy, outfile = "./data/SplitsTree/ratsSNPs_SplitsTree_input.phy") 
 # can be opened by splitstree when configured as proteins/amino acids
 ```
 

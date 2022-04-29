@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```{r libraries}
 library(ade4)
 library(geosphere)
+library(ggplot2)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
@@ -21,14 +22,14 @@ setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 # Loading the data
 
 ```{r loading data}
-data <- read.csv("./data/ratsSNPs_clean.csv")
-gen.matrix <- as.matrix(read.delim("./data/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE))
+data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
+gen.matrix <- as.matrix(read.delim("./data/SplitsTree/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE))
 # Make sure the text file is the distances only, remove any extras e.g. column vector at bottom of file
 ```
 
 # Creating geographical distance matrix
 
-Using the mapview funtion in the last code chunk I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign, and that Reiono and Honuea have the same coordinates even though they're different islands. Fixing that here:
+Using the mapview funtion in the last code chunk of this script I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign, and that Reiono and Honuea have the same coordinates even though they're different islands. Fixing that here:
 ```{r longitude adjustment}
 x <- grep("Tahanea", data$island.1, value = FALSE) # finding rows of Tahanea
 names(data) # finding column number for "geo_long"
@@ -58,10 +59,11 @@ data[x, 12] <- -149.558 # replacing geo_long
 
 rm(x)
 
-write.csv(data, "./data/ratsSNPs_clean.csv", row.names = FALSE)
+write.csv(data, "./data/RStudio/ratsSNPs_clean.csv", row.names = FALSE)
 ```
 
 (only need to do the above code once since it saves the edited df to file)
+
 
 Different distance functions:
 
@@ -153,22 +155,8 @@ Variance: 0.0001121521
 
 # Plots
 
-```{r plots}
-x <- data.frame(as.vector(gen.dist), as.vector(geo.dist))
-colnames(x) <- c("Genetic_Distance", "Geographic_Distance")
-
-library(ggplot2)
-
-ggplot(data = x, aes(x = Geographic_Distance, y = Genetic_Distance)) + 
-  geom_point(shape = 1, colour = "grey") + 
-  geom_smooth(method = "lm") + 
-  geom_quantile(quantiles = c(0.05, 0.95))
-# linear smooth regression line and 5/95 quantile lines added
-```
-
 ```{r making pairwise distance summary df}
-getwd()
-specimens <- read.delim("./data/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
+specimens <- read.delim("./data/SplitsTree/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
 specimens <- as.vector(specimens[,2])
 
 colnames(gen.matrix) <- specimens 
@@ -176,6 +164,9 @@ rownames(gen.matrix) <- specimens # naming the rows and columns by the order giv
 
 colnames(geo.matrix) <- data[,1]
 rownames(geo.matrix) <- data[,1] # naming the rows and columns here by the order of lat/long, which came from the data df
+
+gen.matrix[lower.tri(gen.matrix)] <- NA # keeping only the upper triangle of each matrix
+geo.matrix[lower.tri(geo.matrix)] <- NA
 
 dist.summary <- data.frame(
   col = colnames(gen.matrix)[col(gen.matrix)],
@@ -193,23 +184,147 @@ dist.summary <- merge(dist.summary, x, by = 1:2, all = TRUE) # merging the 2 dfs
 rm(x)
 
 dist.summary <- tidyr::unite(dist.summary, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+
+dist.summary$geo.dist <- dist.summary$geo.dist/1000 # going from metres to km
+
+dist.summary <- na.omit(dist.summary) # removing NA's that were in the bottom triangle
+
+head(dist.summary, 30)
+
+getwd()
+write.csv(dist.summary, "./data/RStudio/gen_geo_distance_matrices_df.csv", row.names = FALSE)
 ```
 
-The above df "dist.summary" is not ideal since it's not space efficient (13.6 MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
+The above df "dist.summary" is not ideal since it's not space efficient (~12MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
 
-```{r plots with labels}
-names(dist.summary)
+```{r removing rows with zeros}
+z <- dist.summary
+z[z == 0] <- NA
+z <- na.omit(z)
+# rows which have either or both gen and geo dist at zero will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
+
+LM <- lm(gen.dist ~ geo.dist, data = z) # model
+summary(LM) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # diagnostic plots
+par(mfrow = c(1, 1))
+plot(log10(gen.dist + 1) ~ geo.dist, data = z)
+abline(coef = coef(LM), col = 4, lwd = 2)
+MASS::boxcox(LM)
+
+LM <- lm(log10(gen.dist + 1) ~ geo.dist, data = z) # model
+summary(LM) # model results
+qqnorm(LM$residuals)
+qqline(LM$residuals)
+hist(LM$residuals)
+ks.test(LM$residuals, 'pnorm')
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # more diagnostic plots
+par(mfrow = c(1, 1))
+plot(log10(gen.dist + 1) ~ geo.dist, data = z)
+abline(coef = coef(LM), col = 4, lwd = 2)
+MASS::boxcox(LM)
+
+GLM <- glm(gen.dist ~ geo.dist, data = z, family = Gamma(link = "inverse"))
+summary(GLM) # model results
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+```{r linear model checking}
+summary(dist.summary$gen.dist)
+
+LM <- lm(gen.dist ~ geo.dist, data = dist.summary) # model
+summary(LM) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
+
+# Using these tests and plots to test normality in the variables and the model residuals:
+qqnorm(LM$residuals)
+qqline(LM$residuals)
+hist(LM$residuals)
+ks.test(LM$residuals, 'pnorm') # testing for normality, p-value <0.05 t/f rejects H0 that the residuals are normal
+
+par(mfrow = c(1, 1))
+MASS::boxcox(LM) # closest to 0, therefore could try log(x) transformation (alternatively exp(x))
+plot(gen.dist ~ geo.dist, data = dist.summary)
+abline(coef = coef(LM), col = 4, lwd = 2)
+```
+
+```{r}
+LM <- lm(log10(gen.dist + 1) ~ geo.dist, data = dist.summary) # model (with 1 added everywhere to avoid numbers less than 1 which go whack with log)
+summary(LM) # model results
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(LM) # diagnostic plots, looks promising
+par(mfrow = c(1, 1))
+plot(log10(gen.dist + 1) ~ log10(geo.dist + 1), data = dist.summary)
+abline(coef = coef(LM), col = 4, lwd = 2)
+```
+
+**Results for log transformed model:**  
+
+> Residuals:  
+
+|Min|1Q|Median|3Q|Max|
+|:----:|:----:|:----:|:----:|:----:|
+|-0.81095|-0.21637|-0.00449|0.17447|0.87210|
+
+> Coefficients:  
+
+| |Estimate|Std. Error|t value|p-value|
+|:----:|:----:|:----:|:----:|:----:|
+|(Intercept)|-1.559641|0.006220|-250.7|<2e-16 ***|
+|log10(geo.dist)|0.215728|0.001731|124.6|<2e-16 ***|
+
+> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+> Residual standard error: 0.2644 on 65254 degrees of freedom  
+Multiple R-squared:  0.1922  
+Adjusted R-squared:  0.1922  
+F-statistic: 1.553e+04 on 1 and 65254 DF,  p-value: < 2.2e-16
+
+* Higher (or further from 0) t-value is generally more significant, related to p-value.
+* Multiple R-squared indicates ~20% of the variance is explained by the model
+* Significant p-value(s), can reject H0 where x and y are not correlated.
+* F-test indicates if the variance that is explained by the model is significant, however it is sensitive to non-normality
+
+
+**Notes on diagnostic plots for log transformed model:**
+
+* Residuals vs. Fitted plot shows a horizontal almost flat t/f indicates the relationship is linear. 
+* Normal QQ plot shows residuals generally in line, indicating normality. A few points out of line at the lower end.
+* Scale-Location plot is used to indicate constant residual variance with a line that does not trend up or down overall. Constant residual variance appears present.
+* Residuals vs Leverage (Cook's distance) plot assesses outliers. None of the points are over 1 (Cook's distance line which would make them statistical outliers) nor are any over 0.5 (which would make them questionable).
+
+
+```{r plots}
 ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + 
   geom_point(shape = 1, colour = "grey") + 
   geom_smooth(method = "lm") + 
-  geom_quantile(quantiles = c(0.05, 0.95)) + 
-  geom_text(aes(label = ifelse(gen.dist > 1.12, as.character(islands.combo), '')), hjust = 0, vjust = 0)
+  geom_quantile(quantiles = c(0.05, 0.95)) +
+  ggtitle("Correlation between Geographic and Genetic Distance between Islands") +
+  xlab("Geographic Distance between 2 islands (km)") + ylab("Genetic Distance between 2 islands") +
+  theme_light()
+# linear smooth regression line and 5/95 quantile lines added
 
-# + geom_text(hjust=0, vjust=0)
-
-
+# log transformed:
+ggplot(data = dist.summary, aes(x = log10(geo.dist), y = log10(gen.dist))) + 
+  geom_point(shape = 1, colour = "grey") + 
+  geom_smooth(method = "lm") + 
+  ggtitle("Geographic versus Genetic Distance between Islands") +
+  xlab("log10 Geographic Distance between 2 islands (km)") + ylab("log10 Genetic Distance between 2 islands") +
+  theme_light()
 ```
-
 
 # Experimenting with plotting the coordinates on a map
 
