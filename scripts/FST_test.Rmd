@@ -15,6 +15,8 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 library(corrplot)
 library(ggplot2)
 library(tidyr)
+library(car)
+library(geosphere)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
@@ -52,7 +54,7 @@ copy <- x
 rm(x, coln) # removing excess objects
 ```
 
-### Producing the file necessary for PGDSpider program
+# Producing the file necessary for PGDSpider program
 
 ```{r file prep}
 copy <- copy[order(copy$island, decreasing = FALSE), ] # ordering df alphabetically by island
@@ -147,9 +149,9 @@ rm(list = c(letters[seq(from = 1, to = 25)])) # removing excess objects
 ```
 
 
-### Analysis
+# Analysis
 
-#### Loading the results files 
+## Loading the results files 
 
 ```{r loading results files}
 popnames <- as.character(
@@ -195,9 +197,11 @@ x <- t(pwd) # transposed copy
 pwd[upper.tri(pwd, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)] # making full matrix (not just lower tri)
 x <- t(pv) # transposed copy for p-values
 pv[upper.tri(pv, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)]
+
+rm(x)
 ```
 
-#### Creating results df on which to base analyses
+## Creating results df on which to base analyses
 
 ```{r fst df}
 pwd.df <- pwd
@@ -265,68 +269,81 @@ pwd.df$geo.dist <- pwd.df$geo.dist/1000 # going from metres to km
 rm(longlat, geo.matrix, geo.df)
 ```
 
-#### Linear modelling
+## Saving outcomes
+
+```{r saving}
+write.csv(pwd.df, "./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv", row.names = FALSE)
+write.csv(pv, "./Results/Arlequin_FST/FST_RStudio_pvalue_matrix.csv", row.names = FALSE)
+```
+
+## Linear modelling
+
+```{r loading data if necessary}
+pwd.df <- read.csv("./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv")
+```
+
+
+### i. Test model 
 
 ```{r linear model}
-LM <- lm(fst.dist ~ geo.dist, data = pwd.df) # model
-summary(LM) # model results
-par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM) # diagnostic plots
+testLM <- lm(fst.dist ~ geo.dist, data = pwd.df) # model
+summary(testLM) # model results
 
-car::outlierTest(LM) # no. 148 most extreme
-pwd.df[148,] # Normandy Is:Mainland, FST -0.33292
-
-car::ncvTest(LM) # homoscedasticity test
-# Chisquare = 12.31918, Df = 1, p = 0.00044833, H0 of constant variance is rejected
-
-par(mfrow = c(1, 1))
 plot(fst.dist ~ geo.dist, data = pwd.df)
+abline(coef = coef(testLM), col = 4, lwd = 2)
+```
+
+```{r}
+par(mfrow = c(2, 2)) # changing the number of plots visible at once 
+plot(testLM) # diagnostic plots
+
+par(mfrow = c(1,1))
+residualPlots(testLM) # linear relationship, Tukey test p-value 0.6207 therefore H0 linearity not rejected
+hist(testLM$residuals, breaks = 10, xlim = c(-1,1))
+
+qqPlot(testLM$residuals, line = "quartiles") # normal, possible outliers 132, 148
+shapiro.test(testLM$residuals) # W = 0.97774, p-value = 0.0001291, indicates non-normality of residuals but likely affected by the 2 outliers mentioned above
+
+ncvTest(testLM) # homoscedasticity test: Chisquare = 12.31918, Df = 1, p = 0.00044833, H0 of constant variance is rejected. Supported by downward slope in Scale-location plot (plot(testLM))
+
+influenceIndexPlot(testLM) # outliers
+# Cooks distances: none larger than 0.5, 
+# Studentised residuals: 132 and 148 less than -3
+# Bonferroni p-value: 132 and 148 smaller then 0.05, 
+# Hat-values: none influential, higher than 1
+outlierTest(testLM) # 148: rstudent = -5.174788, unadjusted p-value = 4.2083e-07, Bonferroni p = 0.00012625
+```
+
+* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot therefore non-constant variance, and 132 and 148 are potential issues.
+
+### ii. Adjusted Model
+
+```{r testing lm without negative fst values}
+z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 and 148 which are both negative FST values
+
+LM <- lm(fst.dist ~ geo.dist, data = z) # model
+summary(LM) # model results
+
+plot(fst.dist ~ geo.dist, data = z)
 abline(coef = coef(LM), col = 4, lwd = 2)
 ```
 
-**Results:**
-
-> Call:
-lm(formula = fst.dist ~ geo.dist, data = pwd.df)
-
-> Residuals:
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:| 
-|-0.80573|-0.08944|0.00017|0.11193|0.37928|
-
-> Coefficients:
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|    
-|(Intercept)|3.531e-01|1.842e-02|19.172|< 2e-16 \*\*\*|
-|geo.dist|2.096e-05|2.985e-06|7.021|1.5e-11 \*\*\*|
-
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘\*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-> Residual standard error: 0.1626 on 298 degrees of freedom  
-Multiple R-squared:  0.1419  
-Adjusted R-squared:  0.1391   
-F-statistic: 49.29 on 1 and 298 DF,  p-value: 1.496e-11
-
-* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot therefore non-constant variance, and although 148 is far apart it is not above cook's distance and not high leverage.
-
-
-```{r testing lm without negative fst values}
-x <- pwd.df[pwd.df$fst.dist >= 0,]
-
-LM2 <- lm(fst.dist ~ geo.dist, data = x) # model
-summary(LM2) # model results
-par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM2) # diagnostic plots: non-constant variance!
+```{r}
+par(mfrow = c(2, 2)) # changing the number of plots visible at once
+plot(LM) # diagnostic plots: non-constant variance!
 
 par(mfrow = c(1, 1))
-plot(fst.dist ~ geo.dist, data = x)
-abline(coef = coef(LM2), col = 4, lwd = 2)
+residualPlots(LM) # linear relationship, Tukey test p-value 0.3304 therefore H0 linearity not rejected
+hist(LM$residuals, breaks = 10, xlim = c(-1,1))
 
-car::ncvTest(LM2) # homoscedasticity test
-# Chisquare = 16.78224, Df = 1, p = 0.000041924, H0 of constant variance is rejected
-MASS::boxcox(LM2) # original values likely produce the best fit
+qqPlot(LM$residuals, line = "quartiles") # normal
+shapiro.test(LM$residuals) # W = 0.99434, p-value = 0.3354, indicates normality of residuals
+
+ncvTest(LM) # homoscedasticity test: Chisquare = 16.78224, Df = 1, p = 4.1924e-05, H0 of constant variance is rejected. Supported by downward slope in Scale-location plot (plot(testLM))
+
+influenceIndexPlot(LM) # outliers test
+
+boxCox(LM) # recommended to stay as is
 ```
 
 **Results:**
@@ -338,14 +355,14 @@ lm(formula = fst.dist ~ geo.dist, data = x)
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:| 
-|-0.40541|-0.09238|-0.00324|0.10726|0.37482| 
+|-0.40541 -0.09238 -0.00324  0.10726  0.37482| 
 
 > Coefficients:
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|    
-|(Intercept)|3.573e-01|1.731e-02|20.641|< 2e-16 \*\*\*|
-|geo.dist|2.104e-05|2.804e-06|7.506|7.22e-13 \*\*\*|
+|(Intercept)|3.573e-01  1.731e-02  20.641|< 2e-16 \*\*\*|
+|geo.dist|2.104e-05  2.804e-06   7.506 7.22e-13 \*\*\*|
 
 > Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -354,7 +371,7 @@ Multiple R-squared:  0.1599
 Adjusted R-squared:  0.157   
 F-statistic: 56.33 on 1 and 296 DF,  p-value: 7.222e-13
 
-* Diagnostic Plots: indicates linear relationship, normal distribution of residuals, non-constant variance (more visible than LM 1), and nosignificant (or high leverage) outliers.
+* Diagnostic Plots: indicates linear relationship, normal distribution of residuals, non-constant variance (more visible than LM 1), and no significant (or high leverage) outliers.
 
 ### Plots 
 
@@ -380,7 +397,7 @@ From 0 to 1: 0 implying free interbreeding, 1 means the popn.s don't interbreed
 "Values for mammal populations between subspecies, or closely related species, typical values are of the order of 5% to 20%"
 
 ```{r ggplot}
-ggplot(data = x, aes(x = geo.dist, y = fst.dist)) + 
+ggplot(data = z, aes(x = geo.dist, y = fst.dist)) + 
   geom_point(shape = 1, colour = "black") + 
   geom_smooth(method = "lm", se = TRUE) + 
   ggtitle("Correlation between FST and Geographic Distance between Islands") +

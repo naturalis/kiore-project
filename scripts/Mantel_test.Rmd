@@ -336,40 +336,10 @@ longlat <- longlat[,-1]
 longlat
 
 library(sf)
-x <- st_as_sf(longlat, coords = c("geo_long", "geo_lat"),  crs = 4326) # 4326 is WGS84 Coordinate Reference System
+x <- st_as_sf(longlat, coords = c("geo_long", "geo_lat"),  crs = 4326) # 4326 is WGS84 Coordinate Reference System. could try for pacific: 9191, 3994, 8909, 3832
 
 library(mapview)
-mapview(
-  x, grid = FALSE, map.types = "Esri.WorldGrayCanvas",
-  col.regions = c(
-    "red",
-    "grey40",
-    "indianred1",
-    "blue",
-    "grey91",
-    "darkorchid1",
-    "moccasin",
-    "darkorange1",
-    "navy",
-    "goldenrod1",
-    "deeppink",
-    "yellow",
-    "slategray3",
-    "yellowgreen",
-    "chocolate4",
-    "palegreen",
-    "coral4",
-    "green",
-    "darkmagenta",
-    "seagreen3",
-    "lightsalmon",
-    "darkgreen",
-    "pink",
-    "cyan",
-    "plum",
-    "peru"
-  )
-)
+mapview(x, grid = FALSE, map.types = "OPNVKarte", legend = FALSE, native.crs = FALSE)
 ```
 
 For the code above I would need to find an alternative to mapview because there appears to be a bug where the legend colours don't match up to the map point colours
