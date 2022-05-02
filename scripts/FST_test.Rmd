@@ -314,64 +314,72 @@ influenceIndexPlot(testLM) # outliers
 outlierTest(testLM) # 148: rstudent = -5.174788, unadjusted p-value = 4.2083e-07, Bonferroni p = 0.00012625
 ```
 
-* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot therefore non-constant variance, and 132 and 148 are potential issues.
+* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot and cone-shaped residuals vs. fitted plot therefore non-constant variance, and 132 and 148 are potential issues.
 
 ### ii. Adjusted Model
 
-```{r testing lm without negative fst values}
+```{r adjusted model building}
 z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 and 148 which are both negative FST values
 
-LM <- lm(fst.dist ~ geo.dist, data = z) # model
+x <- lm(fst.dist ~ geo.dist, data = z) # creating model to take weights from
+wt <- 1 / lm(abs(x$residuals) ~ x$fitted.values)$fitted.values^2 # weighting residuals by how large they are
+rm(x) 
+
+LM <- lm(fst.dist ~ geo.dist, data = z, weights = wt) # weighted residual model
 summary(LM) # model results
 
 plot(fst.dist ~ geo.dist, data = z)
 abline(coef = coef(LM), col = 4, lwd = 2)
 ```
 
-```{r}
+```{r adjusted model diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once
 plot(LM) # diagnostic plots: non-constant variance!
 
 par(mfrow = c(1, 1))
-residualPlots(LM) # linear relationship, Tukey test p-value 0.3304 therefore H0 linearity not rejected
+residualPlots(LM) # Tukey test p-value 0.06849 therefore H0 linearity not rejected
+
 hist(LM$residuals, breaks = 10, xlim = c(-1,1))
-
 qqPlot(LM$residuals, line = "quartiles") # normal
-shapiro.test(LM$residuals) # W = 0.99434, p-value = 0.3354, indicates normality of residuals
+shapiro.test(LM$residuals) # W = 0.99402, p-value = 0.2898, indicates normality of residuals
 
-ncvTest(LM) # homoscedasticity test: Chisquare = 16.78224, Df = 1, p = 4.1924e-05, H0 of constant variance is rejected. Supported by downward slope in Scale-location plot (plot(testLM))
+ncvTest(LM) # homoscedasticity test: Chisquare = 2.234525e-07, Df = 1, p = 0.99962, H0 of constant variance is not rejected. Supported by flat-ish slope in Scale-location plot (plot(testLM))
 
-influenceIndexPlot(LM) # outliers test
+influenceIndexPlot(LM) # outliers test, nothing concerning
 
 boxCox(LM) # recommended to stay as is
 ```
 
-**Results:**
+### iii. Results
 
 > Call:
-lm(formula = fst.dist ~ geo.dist, data = x)
+lm(formula = fst.dist ~ geo.dist, data = x, weights = wt)
 
 > Residuals:
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:| 
-|-0.40541 -0.09238 -0.00324  0.10726  0.37482| 
+|-3.08685|-0.81585|-0.02973|0.88374|3.06125| 
 
 > Coefficients:
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|    
-|(Intercept)|3.573e-01  1.731e-02  20.641|< 2e-16 \*\*\*|
-|geo.dist|2.104e-05  2.804e-06   7.506 7.22e-13 \*\*\*|
+|(Intercept)|0.3696|1.825e-02|20.251|< 2e-16 ***|
+|geo.dist|1.889e-05|2.386e-06|7.916|4.96e-14 ***|
 
 > Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-> Residual standard error: 0.1527 on 296 degrees of freedom  
-Multiple R-squared:  0.1599  
-Adjusted R-squared:  0.157   
-F-statistic: 56.33 on 1 and 296 DF,  p-value: 7.222e-13
+> Residual standard error: 1.246 on 296 degrees of freedom  
+Multiple R-squared:  0.1747  
+Adjusted R-squared:  0.1719   
+F-statistic: 62.66 on 1 and 296 DF,  p-value: 4.959e-14
 
-* Diagnostic Plots: indicates linear relationship, normal distribution of residuals, non-constant variance (more visible than LM 1), and no significant (or high leverage) outliers.
+* Even spread of residuals around 0
+* t-values are far from 1 and both are significant
+* Residual standard error is very high compared to the estimate
+* Only approx. 16% of the variance of fst.dist can de explained by geo.dist!
+
 
 ### Plots 
 

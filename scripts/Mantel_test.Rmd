@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 library(ade4)
 library(geosphere)
 library(ggplot2)
+library(car)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
@@ -153,7 +154,7 @@ Alternative hypothesis: greater
 Expectation: -0.0002961658  
 Variance: 0.0001121521  
 
-# Plots
+# Creating pairwise distances dataframe
 
 ```{r making pairwise distance summary df}
 specimens <- read.delim("./data/SplitsTree/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
@@ -197,115 +198,106 @@ write.csv(dist.summary, "./data/RStudio/gen_geo_distance_matrices_df.csv", row.n
 
 The above df "dist.summary" is not ideal since it's not space efficient (~12MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
 
+# Linear Modelling
+
+```{r reloading data if necessary}
+dist.summary <- read.csv("./data/RStudio/gen_geo_distance_matrices_df.csv")
+```
+
+
 ```{r removing rows with zeros}
-z <- dist.summary
-z[z == 0] <- NA
-z <- na.omit(z)
-# rows which have either or both gen and geo dist at zero will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
+z <- dist.summary # making copy
+z[z == 0] <- NA # turning zeros to NAs
+z <- na.omit(z) # removing rows with NAs
+```
 
-LM <- lm(gen.dist ~ geo.dist, data = z) # model
-summary(LM) # model results
-par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM) # diagnostic plots
+Rows which have either or both gen and geo dist at zero will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
+
+## i. Test Model
+
+```{r test model 1 building}
+testLM <- lm(gen.dist ~ geo.dist, data = z) # model
+summary(testLM) # model results
+
+plot(gen.dist ~ geo.dist, data = z)
+abline(coef = coef(testLM), col = 4, lwd = 2)
+```
+
+```{r test model 1 diagnostics}
+par(mfrow = c(2, 2)) # changes the number of plots visible at once
+plot(testLM) # # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
+
 par(mfrow = c(1, 1))
-plot(log10(gen.dist + 1) ~ geo.dist, data = z)
-abline(coef = coef(LM), col = 4, lwd = 2)
-MASS::boxcox(LM)
+residualPlots(testLM) # curved therefore some non-linearity possible, Tukey test p-value is significant, indicating non-linearity
 
-LM <- lm(log10(gen.dist + 1) ~ geo.dist, data = z) # model
-summary(LM) # model results
-qqnorm(LM$residuals)
-qqline(LM$residuals)
-hist(LM$residuals)
-ks.test(LM$residuals, 'pnorm')
-par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM) # more diagnostic plots
-par(mfrow = c(1, 1))
-plot(log10(gen.dist + 1) ~ geo.dist, data = z)
-abline(coef = coef(LM), col = 4, lwd = 2)
-MASS::boxcox(LM)
+qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
+shapiro.test(testLM$residuals) # doesn't work, sample size must be between 3 and 5000
+ks.test(testLM$residuals, 'pnorm') # D = 0.4324, p-value < 2.2e-16, non-normal
+hist(testLM$residuals, breaks = 50) # clear positive skew
 
-GLM <- glm(gen.dist ~ geo.dist, data = z, family = Gamma(link = "inverse"))
+ncvTest(testLM) # homoscedasticity test: Chisquare = 947.4107, Df = 1, p = < 2.22e-16, H0 of constant variance is rejected
+
+influenceIndexPlot(testLM) # outliers, hard to judge since there seem to be many, or none which are an issue
+outlierTest(testLM) # lists 10 different points which could be an issue (all over 3 rstudent and signif.)
+
+boxCox(testLM) # recommended log transformation
+```
+
+
+## ii. Adjusted Model
+
+I attempted to transform the data (e.g. sqrt, log10) to achieve normal residual distribution however it was not successful so I will build a GLM instead.
+
+```{r adjusted model 1 building}
+GLM <- glm(gen.dist ~ geo.dist, data = z, family = Gamma(link = "identity")) # Gamma distrubution family used for right-skewed data. 
+# I tried the link functions "log" and "inverse" first but the resulting coefficients were very peculiar (e.g. intercepts at -2 or 7)
 summary(GLM) # model results
 
-
-
-```
-
-
-
-
-
-
-
-
-
-
-```{r linear model checking}
-summary(dist.summary$gen.dist)
-
-LM <- lm(gen.dist ~ geo.dist, data = dist.summary) # model
-summary(LM) # model results
-par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM) # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
-
-# Using these tests and plots to test normality in the variables and the model residuals:
-qqnorm(LM$residuals)
-qqline(LM$residuals)
-hist(LM$residuals)
-ks.test(LM$residuals, 'pnorm') # testing for normality, p-value <0.05 t/f rejects H0 that the residuals are normal
-
 par(mfrow = c(1, 1))
-MASS::boxcox(LM) # closest to 0, therefore could try log(x) transformation (alternatively exp(x))
-plot(gen.dist ~ geo.dist, data = dist.summary)
-abline(coef = coef(LM), col = 4, lwd = 2)
+plot(gen.dist ~ geo.dist, data = z)
+abline(coef = coef(GLM), col = 4, lwd = 2)
 ```
 
-```{r}
-LM <- lm(log10(gen.dist + 1) ~ geo.dist, data = dist.summary) # model (with 1 added everywhere to avoid numbers less than 1 which go whack with log)
-summary(LM) # model results
+```{r adjusted model 1 diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM) # diagnostic plots, looks promising
-par(mfrow = c(1, 1))
-plot(log10(gen.dist + 1) ~ log10(geo.dist + 1), data = dist.summary)
-abline(coef = coef(LM), col = 4, lwd = 2)
+plot(GLM) # diagnostic plots
+
+residualPlots(GLM)
+
+qqPlot(GLM$residuals, line = "quartiles") # 
+ks.test(GLM$residuals, 'pnorm') # 
+hist(GLM$residuals, breaks = 50)
 ```
 
-**Results for log transformed model:**  
+## iii. GLM Results
 
-> Residuals:  
+> Call:
+glm(formula = gen.dist ~ geo.dist, family = Gamma(link = "identity"), data = z)
+
+> Deviance Residuals: 
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:|
-|-0.81095|-0.21637|-0.00449|0.17447|0.87210|
+|-1.7511|-0.5344|-0.2203|0.1489|2.9980|  
 
-> Coefficients:  
+> Coefficients:
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|-1.559641|0.006220|-250.7|<2e-16 ***|
-|log10(geo.dist)|0.215728|0.001731|124.6|<2e-16 ***|
+|(Intercept)|9.593e-02|6.969e-04|137.7|<2e-16 ***|
+|geo.dist|1.988e-05|1.620e-07|122.7|<2e-16 ***|
 
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-> Residual standard error: 0.2644 on 65254 degrees of freedom  
-Multiple R-squared:  0.1922  
-Adjusted R-squared:  0.1922  
-F-statistic: 1.553e+04 on 1 and 65254 DF,  p-value: < 2.2e-16
+> (Dispersion parameter for Gamma family taken to be 0.4959804)
 
-* Higher (or further from 0) t-value is generally more significant, related to p-value.
-* Multiple R-squared indicates ~20% of the variance is explained by the model
-* Significant p-value(s), can reject H0 where x and y are not correlated.
-* F-test indicates if the variance that is explained by the model is significant, however it is sensitive to non-normality
+> Null deviance: 30851  on 65255  degrees of freedom  
+Residual deviance: 23001  on 65254  degrees of freedom  
+AIC: -118035  
 
+> Number of Fisher Scoring iterations: 5
 
-**Notes on diagnostic plots for log transformed model:**
-
-* Residuals vs. Fitted plot shows a horizontal almost flat t/f indicates the relationship is linear. 
-* Normal QQ plot shows residuals generally in line, indicating normality. A few points out of line at the lower end.
-* Scale-Location plot is used to indicate constant residual variance with a line that does not trend up or down overall. Constant residual variance appears present.
-* Residuals vs Leverage (Cook's distance) plot assesses outliers. None of the points are over 1 (Cook's distance line which would make them statistical outliers) nor are any over 0.5 (which would make them questionable).
-
+# Plots
 
 ```{r plots}
 ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + 
@@ -326,7 +318,7 @@ ggplot(data = dist.summary, aes(x = log10(geo.dist), y = log10(gen.dist))) +
   theme_light()
 ```
 
-# Experimenting with plotting the coordinates on a map
+# Experimenting with plotting the coordinates on a map (in progress)
 
 ```{r map plotting}
 names(data)

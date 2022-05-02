@@ -357,7 +357,7 @@ outlierTest(LM) # 10: rstudent = 2.472633, unadjusted p-value = 0.022509, Bonfer
 The distribution of residuals is now normal, although there appears to be some level of heteroscedasticity visible in the plots (residuals vs. fitted, scale-location, residualPlot) even though the ncv test does not reject HO of constant variance of the residuals. I am not too concerned with this because the sample size is small and I do not want to over-analyse the diagnostics when my goal is merely to check for a correlation. 
 
 
-**Results:**  
+### iii. Results  
 
 > Residuals:  
 
@@ -369,8 +369,8 @@ The distribution of residuals is now normal, although there appears to be some l
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|8.695e+01|1.379e+00|63.035|< 2e-16 ***|
-|km.from.ML|5.221e-04|1.509e-04|3.459|0.00235 **|
+|(Intercept)|86.95|1.379|63.035|< 2e-16 ***|
+|km.from.ML|0.0005221|0.0001509|3.459|0.00235 **|
 
 > Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
 
@@ -379,11 +379,12 @@ Multiple R-squared:  0.363
 Adjusted R-squared:  0.3326   
 F-statistic: 11.96 on 1 and 21 DF,  p-value: 0.002349  
 
-* Higher t-value is generally more significant, related to p-value.
+* Higher t-value is generally more significant (above 2), related to p-value. High enough here.
+* The residual standard error is very low compared to the intercept estimate, which is ideal.
 * Multiple R-squared indicates ~36% of the variance is explained by the model
 * Significant p-value(s), can reject H0 where x and y are not correlated.
 
-### iii. Model Plot
+### vi. Model Plot
 
 ```{r lm with distance plot}
 ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) + 
@@ -443,7 +444,7 @@ boxCox(testLM2) # suggests log transformation
 
 Trying log10 of the area since there's a cluster of small islands. Bigger islands will be "squeezed" more than smaller islands so that ratios/distances between points are preserved, abline is estimated over them (but if "unsqueezed" the abline would become curved). A log10 relationship might make sense because the effect of islands size decreases as the islands get bigger.
 
-I'm hesitant to remove any outliers here, but I'm seeing how it goes removing New Guinea and Normanby Island again. Removing them doesn't mean I will not consider them again, however due to having so few data points I think they strongly influence the results and it may be easier to see the general picture without them.
+I'm hesitant to remove any outliers here, but I'm seeing how it goes removing New Guinea and Normanby Island again. Removing them doesn't mean I will not consider them again, however due to having so few data points I think they strongly influence the results and it may be easier to see the general picture without them. Additionally, Normanby Island is missing 57% and New Guinea 56% of the SNPs, making them less reliable.
 
 ```{r adjusted model 2 building}
 z <- per.island[-c(18, 19),] # removing New Guinea and Normanby Island again
@@ -477,7 +478,7 @@ influenceIndexPlot(LM2) # outliers
 outlierTest(LM2) # 14: rstudent = -2.493984, unadjusted p-value = 0.021508, Bonferroni p = 0.49468
 ```
  
-**Results:**  
+### iii. Results  
 
 > Call:
 lm(formula = perc.o ~ log10(area_km2), data = per.island)
@@ -503,7 +504,13 @@ Multiple R-squared:  0.3062
 Adjusted R-squared:  0.2732  
 F-statistic: 9.27 on 1 and 21 DF,  p-value: 0.006159
 
-### iii. Model Plot
+* Spread of residuals seems equal enough on both sides
+* t-values are above or below 2, indicating the coefficients are more reliable
+* Residual standard error much smaller than the intercept estimate, which is good
+* R^2 indicates ~30% of the homozygosity points can be explained by the explanatory variable.
+* F-statistic is higher than 1 and significant, meaning there is a relationship present.
+
+### vi. Model Plot
 
 ```{r labelled lm2 with area plot}
 ggplot(data = per.island, aes(x = log10(area_km2), y = perc.o, label = island)) + 
@@ -539,14 +546,14 @@ cor.test(per.island$km.from.ML, log(per.island$area_km2), method = "pearson") # 
 
 The above plot shows that generally the area of the islands decreases with distance (e.g. Borneo and New Guinea are large, Reiono and Tahanea are small) which I believe is a combination of sampling issues and how the islands are naturally on the Pacific. The correlation between these two variables is an issue with only a basic linear models because I cannot test the affect of each variable compared with each other because their effect is similar (collinearity in this case). I will go through diagnostics to check if the effect is great enough to warrant a different method e.g. GLM.
 
-```{r test model 2 building}
+```{r test model 3 building}
 z <- per.island[-c(18, 19),] # starting by removing New Guinea and Normanby Island again (after brief check of diagnostic plots)
 
 testLM3 <- lm(perc.o ~ km.from.ML + log(area_km2), data = z) # not sure if I should keep log transformation
 summary(testLM3)
 ```
 
-```{r test model 2 diagnostics}
+```{r test model 3 diagnostics}
 par(mfrow = c(2, 2))
 plot(testLM3)
 
@@ -566,8 +573,10 @@ influenceIndexPlot(testLM3) # outliers
 # Hat-values: none influential, higher than 1
 outlierTest(testLM3) # 14: rstudent = 2.238249, unadjusted p-value = 0.037375, Bonferroni p = 0.85962
 
-mctest::mctest(testLM3, type = "b") # tests for collinearity, most tests did not detect e.g. condition number = 7.6872 (issue if >30) and VIF = 1.727 (issue if >5)
+mctest::mctest(testLM3, type = "b") # tests for collinearity, most tests did not detect e.g. condition number = 7.6872 (10-30 indicates presence, issue if >30) and VIF = 1.727 (issue if >5)
 ```
+
+### iii. Results 
 
 > Call:
 lm(formula = perc.o ~ km.from.ML + log10(area_km2), data = per.island)
@@ -576,32 +585,48 @@ lm(formula = perc.o ~ km.from.ML + log10(area_km2), data = per.island)
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:|
-||
+|-4.8047|-2.0464|-0.1323|2.0577|4.7434|
 
 > Coefficients:  
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|
-|(Intercept)||
-|km.from.ML||    
-|log10(area_km2)||
+|(Intercept)|89.1097394|2.2543620|39.528|<2e-16 ***|
+|km.from.ML|0.0003642|0.0001989|1.832|0.0819 .|    
+|log10(area_km2)|-0.1985810|0.1651672|-1.202|0.2433|
    
 > Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-> Residual standard error: 4.664 on 22 degrees of freedom
+> Residual standard error: 2.828 on 20 degrees of freedom
   (1 observation deleted due to missingness)  
-Multiple R-squared:  0.3704  
-Adjusted R-squared:  0.3132  
-F-statistic: 6.473 on 2 and 22 DF,  p-value: 0.006157
+Multiple R-squared:  0.4059  
+Adjusted R-squared:  0.3465  
+F-statistic: 6.832 on 2 and 20 DF,  p-value: 0.005478
 
-* 25 observations - 3 parameters = 22 degrees of freedom
-* The R^2 value indicates that only 37% of the variance is explained (31% when considering the extra parameter added (adjusted R^2), however this is not particularly different from the R^2adj of the other 2 models)
-* The f-test is significant, therefore the the model explains a significant amount of variance
-* The diagnostics for this model do not appear different from the diagnostics of the above 2 models
+* Residuals appear well distributed (approximately 5 on either side of 0, which the median is close to)
+* The t-values are low (between -2 and 2) which is not ideal, estimates may be unreliable
+* Here the explanatory variables are no longer significant, which may mean that both contribute to the overall model but the exact effect of each variable is unclear. This matches up with my findings that the two explanatory variables are at least somewhat colinear.
+* 23 observations - 3 parameters = 20 degrees of freedom
+* The R^2 value indicates that 40% of the variance is explained (35% when considering the extra parameter added)
+* The f-test is above 1 and significant (the higher the better when only with a small number of data points), therefore the variance that is explained is significant (?)
 
-### ii. Adjusted Model and Diagnostics
 
-### iii. Model Plot
+Even though the colinearity test indicated colinearity isn't high between the explanatory variables, I believe it is still present (e.g. visible when modelling the variables against each other) and having an effect on the results above. Both the p-values are not significant, the t-values are low and the standard error is high in this mixed model. The best way forward is generally to remove the colinear variable, and/or accept they are intertwined. An additional problem could be omitted variable bias, where another variable has an important effect on the model but has not been included. For example, the presence of another species on an island.
+
+### vi. Alternative models (GLM)
+
+```{r glm model testing}
+# distance ~ area 
+c <- glm(perc.o ~ km.from.ML + area_km2, data = z, family = gaussian(link = "identity")) 
+summary(c) # km.from.ML significant, AIC 118.34
+
+# distance ~ log area
+c2 <- glm(perc.o ~ km.from.ML + log(area_km2), data = z, family = gaussian(link = "identity")) 
+summary(c2) # intercept still significant, not km or area. AIC 117.88 (lower preferred when comparing models). Results the same as the linear model above.
+```
+
+
+### v. Model Plot
 
 ```{r combo plot}
 ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) + 
