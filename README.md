@@ -5,10 +5,10 @@ Understanding Evolution, Naturalis Biodiversity Center
 20/09/2021 – 23/05/2022  
 
 ### Repo Contents: 
-Files are generally sorted by promgram (e.g. Arlequin) or method (e.g. Mantel test). 
+Files are generally sorted by program (e.g. Arlequin) or method (e.g. Mantel test). 
 
 #### data:
-This folder contains raw data files, cleaned data files, program-specific formatting files and programme log files.
+This folder contains raw data files, cleaned data files, program-specific formatting files and programme log files, in alphabetical order.
 
 1. Arlequin
 	- ratsSNPs_arl_input.arp
@@ -75,17 +75,18 @@ This folder contains raw data files, cleaned data files, program-specific format
 	- summary.html
 
 #### scripts:
-This folder contains the R scripts (and pdf versions) used to clean the data and run analyses. The clean-up steps involved removing rows and columns with high % missing values, file conversion in PGDSpider, a Hardy-Weinberg Equilibrium test in Arlequin, and a Structure analysis in STRUCTURE.
+This folder contains the R scripts (and pdf versions) used to clean the data and run analyses.
 
 1. Data_cleanup.Rmd and .pdf: To make the raw data ready for analysis I...  
 	- Removed SNP columns which had no variation (invariant/monomorphic)  
 	- Removed SNP columns with more than 60% missing values  
 	- Removed specimen rows with more than 56% missing values (leaving a dataset which was/is at least 90% complete)  
+2. Data_review.Rmd and .pdf
 	- Prepped an input file for PGDSpider (a file conversion programme)  
 	- Read the Arlequin Hardy-Weinburg Equilibrium (HWE) analysis output files  
 	- Checked the HWE p-values and ran a Bonferroni test  
 	- Removed samples with issues identified by the HWE analysis  
-	- Double checked for monomorphic SNP columns  
+	- Double checked for monomorphic SNP columns
 2. NeighborNet_Treebuilding.Rmd and .pdf: Created a file to open in SplitsTree, in order to generate a NeighborNet network and export a genetic distance matrix.
 3. Mantel_test.Rmd and .pdf: Generated a geographical distance matrix of distances between all islands where Pacific rats were sampled. Loaded the genetic distance matrix produced in SplitsTree and then used both matrices to run a Mantel test.
 4. Heterozygosity_test.Rmd and .pdf: 
@@ -103,27 +104,18 @@ It is expected that R. exulans populations from neighbouring islands and islands
 
 ____
 
-### Summary of Methods  
+### Methods  
 
-Method for NeighborNet network in SplitsTree
+#### Cleaning the raw data
+Using RStudio
 
-1. I created a Phylip (.phy) file in R using the "NeighborNet_Teebuilding" script on the kiore-project Git Repository.
-	References: Felsenstein, J. (2005). PHYLIP (Phylogeny Inference Package) (3.6). Distributed by the author. https://evolution.genetics.washington.edu/phylip.html
-2. I downloaded and installed SplitsTree4
-	Reference: Huson, D. H., & Bryant, D. (2006). Application of Phylogenetic Networks in Evolutionary Studies. Molecular Biology and Evolution, 23(2), 254–267. https://doi.org/10.1093/molbev/msj030
-2. Opened the .phy file in SplitsTree, selected "protein" when promted the data type (to allow for more symbols than just ATCG)
-3. Saved as .nex file
-	Reference: Maddison DR, Swofford DL, and Maddison WP (1997). NEXUS: An extensible file format for systematic information. Syst Biol 46:590-621
-4. Opened .nex file in text viewer, scrolled to line 382 "datatype = protein" and replaced protein with "dna", and then removed all lines after line 2239 "End CHARACTERS". Saved.
-5. Re-opened in SplitsTree. Under "Distances", selected HKY85 (which now works), and empirical frequencies.
-6. Exported the NeighborNet tree as an image and exported the distance matrix as a tab-delimited text file for use in Mantel test later.
-	Reference: Bryant, D., & Moulton, V. (2004). Neighbor-Net: An Agglomerative Method for the Construction of Phylogenetic Networks. Molecular Biology and Evolution, 21(2), 255–265. https://doi.org/10.1093/molbev/msh018
-7. Opened the exported genetic distances text file and deleted the "distances as column vector" section at the bottom of the file, as well as the title.
 
+#### Reviewing the half-clean data 
+Using PGDSpider, Arlequin and STRUCTURE
 
 Method for Hardy-Weinberg Analysis and Structure analysis using programs PGDSpider, Arlequin and STRUCTURE
 
-1. I Cleaned up and reformatted the dataset in RStudio to a CONVERT file format (c.f. Data_cleanup script kiore-project repository)
+1. I Cleaned up and reformatted the dataset in RStudio to a CONVERT file format (c.f. Data_cleanup script)
 	Reference: Glaubitz J.C. (2004) CONVERT: A user-friendly program to reformat diploid genotypic data for commonly used population genetic software packages. Molecular Ecology Notes 4: 309-310.
 2. Downloaded PGDSpider version 2.1.1.5 (May 2018)
 	Reference: Lischer HEL and Excoffier L (2012) PGDSpider: An automated data conversion tool for connecting population genetics and genomics programs. Bioinformatics 28: 298-299.
@@ -142,7 +134,7 @@ At this stage I had an Arlequin input file (.arp file format) and a STRUCTURE in
 	Reference: Excoffier, L. and H.E. L. Lischer (2010) Arlequin suite ver 3.5: A new series of programs to perform population genetics analyses under Linux and Windows. Molecular Ecology Resources. 10: 564-567.
 6. Opened Arlequin application and applied the settings and procedures as follows:
 	a. File -> Open project -> File: 
-	b. Settings -> General settings -> Polymorhism control Allowed missing level per site: 0.6
+	b. Settings -> General settings -> Polymorphism control Allowed missing level per site: 0.6
 	c. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg equilibrium: check mark
 	d. Start (then upon completion) View Results
 7. Copied the output from the html (or xml) to a text file and saved.
@@ -150,5 +142,39 @@ At this stage I had an Arlequin input file (.arp file format) and a STRUCTURE in
 Structure...
 	Reference:
 
+#### Creating a NeighborNet network
+Using RStudio and SplitsTree
+
+1. I created a Phylip (.phy) file in R using the "NeighborNet_Treebuilding" script on the kiore-project Git Repository.
+	Reference: Felsenstein, J. (2005). PHYLIP (Phylogeny Inference Package) (3.6). Distributed by the author. https://evolution.genetics.washington.edu/phylip.html
+2. I downloaded and installed SplitsTree4
+	Reference: Huson, D. H., & Bryant, D. (2006). Application of Phylogenetic Networks in Evolutionary Studies. Molecular Biology and Evolution, 23(2), 254–267. https://doi.org/10.1093/molbev/msj030
+2. Opened the .phy file in SplitsTree, selected "protein" when promted the data type (to allow for more symbols than just ATCG)
+3. Saved as .nex file
+	Reference: Maddison DR, Swofford DL, and Maddison WP (1997). NEXUS: An extensible file format for systematic information. Syst Biol 46:590-621
+4. Opened .nex file in text viewer, scrolled to line 382 "datatype = protein" and replaced protein with "dna", and then removed all lines after line 2239 "End CHARACTERS". Saved.
+5. Re-opened in SplitsTree. Under "Distances", selected HKY85 (which now works), and empirical frequencies.
+6. Exported the NeighborNet tree as an image and exported the distance matrix as a tab-delimited text file for use in Mantel test later.
+	Reference: Bryant, D., & Moulton, V. (2004). Neighbor-Net: An Agglomerative Method for the Construction of Phylogenetic Networks. Molecular Biology and Evolution, 21(2), 255–265. https://doi.org/10.1093/molbev/msh018
+7. Opened the exported genetic distances text file and deleted the "distances as column vector" section at the bottom of the file, as well as the title.
+
+#### Pairwise FST testing with cleaned data
+1. Opened PGDSpider and selected the following settings:
+	a. Data input file file format: CONVERT; select input file: ratsSNPs_PGDSpyder_input_CLEAN.csv (output from RStudio script FST_test.RMD)
+	b. Data output file file format: ARLEQUIN; select output file: 
+	c. Convert Select the type of the data: SNP; Apply
+	d. Convert
+2. Opened Arlequin application and applied the settings and procedures as follows:
+	a. File -> Open project -> File: 
+	b. Settings -> General settings -> Polymorphism control Allowed missing level per site: 0.6
+	c. Settings -> Population comparisons -> Compute pairwise FST: check mark (number of permutations 1000 and significance level 0.05)
+	d. Start (then upon completion) View Results
+7. Copied the output from the html (or xml) to a text file and saved (fst_allresults.txt)
+
+#### Conducting a Mantel Test
+Using RStudio
+
+#### Testing amount of Heterozygosity
+Using RStudio
 
 ____
