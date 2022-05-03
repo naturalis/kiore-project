@@ -16,6 +16,7 @@ library(ade4)
 library(geosphere)
 library(ggplot2)
 library(car)
+library(plyr)
 getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
@@ -183,20 +184,74 @@ x <- data.frame(
 
 dist.summary <- merge(dist.summary, x, by = 1:2, all = TRUE) # merging the 2 dfs
 rm(x)
+```
 
-dist.summary <- tidyr::unite(dist.summary, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+The above df "dist.summary" is not ideal since it's not space efficient (~12MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
 
-dist.summary$geo.dist <- dist.summary$geo.dist/1000 # going from metres to km
+```{r tidying up pwd df}
+dist.summary <- tidyr::unite(dist.summary, specimens.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
 
 dist.summary <- na.omit(dist.summary) # removing NA's that were in the bottom triangle
 
-head(dist.summary, 30)
+# creating a column of island combination labels, rather than specimen combination:
+islands.combo <- dist.summary$specimens.combo 
+islands.combo <- gsub("[0-9]+", "", islands.combo) # removing specimen ID numbers
+islands.combo <- gsub("_", "", islands.combo) # removing underscores
+unique(islands.combo)
+islands.combo <- gsub("Thailand", "Mainland", islands.combo) # replacing 3 countries with mainland
+islands.combo <- gsub("Laos", "Mainland", islands.combo)
+islands.combo <- gsub("Cambodia", "Mainland", islands.combo)
+islands.combo <- gsub("Halmahera", "Halmaher", islands.combo) # replacing some double ups
+islands.combo <- gsub("NewBritai", "NewBrita", islands.combo)
+islands.combo <- gsub("NewGuinea", "NewGuine", islands.combo)
+islands.combo <- gsub("Motukawan", "Motukawa", islands.combo)
+dist.summary <- cbind(dist.summary, islands.combo) # adding this new column
+rm(islands.combo)
 
+# removing self-self distances, since I'm looking at inter-island not intra-island
+intra <- as.character(c(
+  "Aotea:Aotea",
+  "Borneo:Borneo",
+  "GrtMercury:GrtMercury",
+  "Halmaher:Halmaher",
+  "Hatutaa:Hatutaa",
+  "Honuea:Honuea",
+  "Kaikura:Kaikura",
+  "Kamaka:Kamaka",
+  "Kayangel:Kayangel",
+  "LateIs:LateIs",
+  "Luzon:Luzon",
+  "Mainland:Mainland",
+  "Malenge:Malenge",
+  "Mohotani:Mohotani",
+  "Motukawa:Motukawa",
+  "NewBrita:NewBrita",
+  "NewGuine:NewGuine",
+  "Normanby:Normanby",
+  "Rakiura:Rakiura",
+  "Reiono:Reiono",
+  "Rimatuu:Rimatuu",
+  "Slipper:Slipper",
+  "Southland:Southland",
+  "Sulawesi:Sulawesi",
+  "Tahanea:Tahanea",
+  "WakeIs:WakeIs"
+))
+dist.summary[which(dist.summary$islands.combo %in% intra),4] <- NA # removing same-same island combos
+dist.summary[dist.summary == 0] <- NA # turning zeros to NAs
+dist.summary <- na.omit(dist.summary) # removing rows with NAs
+rm(intra, specimens)
+
+dist.summary$geo.dist <- dist.summary$geo.dist/1000 # going from metres to km
+```
+
+Rows which have either or both gen and geo dist at zero (although there should never be a gen.dist at zero) will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
+
+```{r saving pwd df}
 getwd()
 write.csv(dist.summary, "./data/RStudio/gen_geo_distance_matrices_df.csv", row.names = FALSE)
 ```
 
-The above df "dist.summary" is not ideal since it's not space efficient (~12MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
 
 # Linear Modelling
 
@@ -204,22 +259,13 @@ The above df "dist.summary" is not ideal since it's not space efficient (~12MB),
 dist.summary <- read.csv("./data/RStudio/gen_geo_distance_matrices_df.csv")
 ```
 
-
-```{r removing rows with zeros}
-z <- dist.summary # making copy
-z[z == 0] <- NA # turning zeros to NAs
-z <- na.omit(z) # removing rows with NAs
-```
-
-Rows which have either or both gen and geo dist at zero will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
-
 ## i. Test Model
 
 ```{r test model 1 building}
-testLM <- lm(gen.dist ~ geo.dist, data = z) # model
+testLM <- lm(gen.dist ~ geo.dist, data = dist.summary) # model
 summary(testLM) # model results
 
-plot(gen.dist ~ geo.dist, data = z)
+plot(gen.dist ~ geo.dist, data = dist.summary)
 abline(coef = coef(testLM), col = 4, lwd = 2)
 ```
 
@@ -228,14 +274,14 @@ par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM) # # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
 
 par(mfrow = c(1, 1))
-residualPlots(testLM) # curved therefore some non-linearity possible, Tukey test p-value is significant, indicating non-linearity
+residualPlots(testLM) 
 
 qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
 shapiro.test(testLM$residuals) # doesn't work, sample size must be between 3 and 5000
-ks.test(testLM$residuals, 'pnorm') # D = 0.4324, p-value < 2.2e-16, non-normal
+ks.test(testLM$residuals, 'pnorm') # D = 0.43238, p-value < 2.2e-16, non-normal
 hist(testLM$residuals, breaks = 50) # clear positive skew
 
-ncvTest(testLM) # homoscedasticity test: Chisquare = 947.4107, Df = 1, p = < 2.22e-16, H0 of constant variance is rejected
+ncvTest(testLM) # homoscedasticity test: Chisquare = 950.7684, Df = 1, p = < 2.22e-16, H0 of constant variance is rejected
 
 influenceIndexPlot(testLM) # outliers, hard to judge since there seem to be many, or none which are an issue
 outlierTest(testLM) # lists 10 different points which could be an issue (all over 3 rstudent and signif.)
@@ -249,12 +295,12 @@ boxCox(testLM) # recommended log transformation
 I attempted to transform the data (e.g. sqrt, log10) to achieve normal residual distribution however it was not successful so I will build a GLM instead.
 
 ```{r adjusted model 1 building}
-GLM <- glm(gen.dist ~ geo.dist, data = z, family = Gamma(link = "identity")) # Gamma distrubution family used for right-skewed data. 
+GLM <- glm(gen.dist ~ geo.dist, data = dist.summary, family = Gamma(link = "identity")) # Gamma distrubution family used for right-skewed data. 
 # I tried the link functions "log" and "inverse" first but the resulting coefficients were very peculiar (e.g. intercepts at -2 or 7)
 summary(GLM) # model results
 
 par(mfrow = c(1, 1))
-plot(gen.dist ~ geo.dist, data = z)
+plot(gen.dist ~ geo.dist, data = dist.summary)
 abline(coef = coef(GLM), col = 4, lwd = 2)
 ```
 
@@ -278,24 +324,51 @@ glm(formula = gen.dist ~ geo.dist, family = Gamma(link = "identity"), data = z)
 
 |Min|1Q|Median|3Q|Max|
 |:----:|:----:|:----:|:----:|:----:|
-|-1.7511|-0.5344|-0.2203|0.1489|2.9980|  
+|-1.7423|-0.5323|-0.2198|0.1474|3.0278|  
 
 > Coefficients:
 
 | |Estimate|Std. Error|t value|p-value|
 |:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|9.593e-02|6.969e-04|137.7|<2e-16 ***|
-|geo.dist|1.988e-05|1.620e-07|122.7|<2e-16 ***|
+|(Intercept)|9.434e-02|6.950e-04|135.7|<2e-16 ***|
+|geo.dist|2.013e-05|1.621e-07|124.2|<2e-16 ***|
 
 > Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 > (Dispersion parameter for Gamma family taken to be 0.4959804)
 
-> Null deviance: 30851  on 65255  degrees of freedom  
-Residual deviance: 23001  on 65254  degrees of freedom  
-AIC: -118035  
+> Null deviance: 30821  on 65068  degrees of freedom  
+Residual deviance: 22856  on 65067  degrees of freedom  
+AIC: -117995  
 
 > Number of Fisher Scoring iterations: 5
+
+```{r examining values under the regression line}
+fv <- as.vector(GLM$fitted.values)
+dist.summary <- cbind(dist.summary, fv)
+
+under.fv <- data.frame()
+for (i in 1:nrow(dist.summary)) { # for every row of the island data (island to island)
+  if (dist.summary[i,2] < dist.summary[i,5]) { # if the genetic distance is less than the fitted value
+    under.fv <- rbind(under.fv, dist.summary[i,]) # row bind
+  }
+}
+rm(i)
+
+plot(gen.dist ~ geo.dist, data = under.fv) # checking, should be all values up to the regression line
+
+all.combos <- count(dist.summary$islands.combo)
+under.fv.combos <- count(under.fv$islands.combo)
+combo.totals <- merge(all.combos, under.fv.combos, by = "x", all = TRUE)
+colnames(combo.totals) <- c("combo", "all", "below.line")
+rm(all.combos, under.fv.combos)
+combo.totals$perc.under <- round(((combo.totals$below.line / combo.totals$all) * 100), 3)
+combo.totals[is.na(combo.totals)] <- 0
+
+# perc.under is the percentage of the specimens with genetic distances (between the two stated islands) which are less than the average genetic distance/point on the regression line at that geographic distance.
+
+combo.totals$combo[combo.totals$perc.under == 100]
+```
 
 # Plots
 
@@ -310,11 +383,11 @@ ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) +
 # linear smooth regression line and 5/95 quantile lines added
 
 # log transformed:
-ggplot(data = dist.summary, aes(x = log10(geo.dist), y = log10(gen.dist))) + 
+ggplot(data = dist.summary, aes(x = (geo.dist)^2, y = gen.dist)) + 
   geom_point(shape = 1, colour = "grey") + 
   geom_smooth(method = "lm") + 
   ggtitle("Geographic versus Genetic Distance between Islands") +
-  xlab("log10 Geographic Distance between 2 islands (km)") + ylab("log10 Genetic Distance between 2 islands") +
+  xlab("Geographic Distance between 2 islands (km)") + ylab("Genetic Distance between 2 islands") +
   theme_light()
 ```
 
