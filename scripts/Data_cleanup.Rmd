@@ -10,7 +10,7 @@ library(formatR)
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
-# Preamble 
+# 1. Preamble 
 
 ```{r libraries}
 library(plyr)
@@ -19,7 +19,7 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# Loading the data
+# 2. Loading the data
 
 ```{r loading raw data}
 data <- read.delim("./data/Raw_data/Genotyping-007.010-01_SNP_Raw_data.tsv")
@@ -38,9 +38,9 @@ data[473,"island.1"] <- "Mainland"
 x <- data # keeping "data" as backup original
 ```
 
-# Tidying SNP order
+# 3. Tidying SNP order
 
-I'm doing this to make R evaluation easier (e.g when checking for counts it does not count A:G and G:A separately)
+* I'm doing this to make R evaluation easier (e.g when checking for counts it does not count A:G and G:A separately)
 ```{r SNP arrangement}
 dim(x) # 333 cols
 count(unlist(x[,17:333]))
@@ -54,7 +54,7 @@ count(unlist(x[,17:333])) # checking success
 ```
 
 
-### Specimens per Island before data clean-up
+## Specimens per Island before data clean-up
 
 ```{r count per island 1}
 count(data$island.1)
@@ -90,7 +90,7 @@ count(data$island.1)
 |Wake Island|20|
 
 
-# Removing SNP columns with no variation (invariant/monomorphic)
+# 4. Removing SNP columns with no variation (invariant/monomorphic)
 
 ```{r invariant column search}
 ncol(x) #333
@@ -117,14 +117,14 @@ for (i in monocols) {
 rm(i, monocols)
 ```
 
-# Removing columns (SNPs) with few samples
+# 5. Removing columns (SNPs) with few samples
 
 ```{r removing sparse columns}
 ncol(x) #333
 percblank <- integer() # empty df for the for loop
 for (i in 17:333) {
   y <- count(grepl("?", x[,i], fixed = TRUE)) # finds and counts freq of ?
-  z <- signif((nrow(x)- y[1,2])/nrow(x)*100, 4) # percentage of ? in the column, to 4 signif digits. I used the no. rows-false outcomes instead of the true outcomes because some rows have no ?s and result in errors.
+  z <- signif((nrow(x)- y[1,2])/nrow(x)*100, 4) # percentage of ? in the column, to 4 signif digits. I used the number of rows-false outcomes instead of the true outcomes because some rows have no "?"s and result in errors.
     if (z > 60) 
       {percblank <- append(percblank, i) 
     }
@@ -145,7 +145,7 @@ ncol(x) #298
 rm(i, percblank)
 ```
 
-# Removing rows (specimens) with few samples
+# 6. Removing rows (specimens) with few samples
 
 ```{r removing sparse rows}
 x2 <- data.table::transpose(x) # transposing the df temporarily since count() doesn't work well on rows
@@ -175,6 +175,8 @@ percblank # 1   7   9  10  11  18  25  48  49  50  51  52  53  55  56  57  58  5
 x <- x[-c(percblank),] # removing the rows listed (percblank) that have too many "?" from the df
 nrow(x) #379
 ```
+
+# 7. Saving
 
 ```{r check and save}
 # checking the % of all "?"s in the df:

@@ -1,5 +1,5 @@
 ---
-title: "Testing the Heterozygosity per Island"
+title: "Testing the Homozygosity per Island"
 author: "Grace Saville"
 date: "01/02/2022"
 output: pdf_document
@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
-# Preamble 
+# 1. Preamble 
 
 ```{r libraries}
 library(stringr)
@@ -20,7 +20,7 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# Dataset loading
+# 2. Dataset loading
 
 ```{r loading data}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
@@ -30,7 +30,7 @@ colnames(copy)
 copy <- copy[,-c(2:16)] # removing unnecessary columns for this analysis
 ```
 
-# Replaces SNP's with symbols for heterozygous and homozygous
+# 3. Replaceing SNP's with symbols for heterozygous and homozygous
 
 ```{r Setting up data}
 dim(copy) # 370 rows 283 columns
@@ -53,7 +53,7 @@ str(copy)
 copy[copy == "?"] <- NA # replacing ? with NA's 
 ```
 
-# Calculating heterozygous and homozygous totals per specimen
+# 4. Calculating heterozygous and homozygous totals per specimen
 
 ```{r totals per specimen}
 o.freq <- vector()
@@ -82,7 +82,7 @@ rm(o.freq, e.freq, na.freq, perc.o, perc.missing)
 str(per.specimen)
 ```
 
-# Calculating heterozygous and homozygous totals per island
+# 5. Calculating heterozygous and homozygous totals per island
 
 ```{r creating island dfs}
 data <- data[order(data$island, decreasing = FALSE),] # ordering df alphabetically by island
@@ -176,12 +176,14 @@ rm(list = shortpopnames)
 
 ```
 
+# 6. Saving
+
 ```{r saving results}
 getwd()
 write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.names = FALSE)
 ```
 
-# Considering island size and distance from mainland
+# 7. Considering island size and distance from mainland
 
 ```{r loading island size}
 island.km <- read.csv("./data/island_size_data.csv", header = TRUE)
@@ -218,6 +220,8 @@ distance.from.ML$km.from.ML <- km.from.ML # adding the kms to the distance df
 rm(i, x, km.from.ML)
 
 ```
+
+# 8. Merging the dataframes for easier analysis
 
 ```{r merging the different dfs}
 names(island.km)
@@ -260,15 +264,17 @@ per.island$island <- c(
 per.island <- merge(per.island, island.km, by.x = "island", by.y = "ISLAND", all = TRUE)
 ```
 
+# 9. Saving again 
+
 ```{r saving results again}
 getwd()
-write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.names = FALSE)
+write.csv(per.island, "./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", row.names = FALSE)
 ```
 
-# Linear regression and plots
+# 10. Linear regression and Plots
 
 ```{r loading the data again if necessary}
-per.island <- read.csv("./results/RStudio_Heterozygosity/heterozygosity_testing_results_table.csv", header = TRUE)
+per.island <- read.csv("./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", header = TRUE)
 ```
 
 Issues to consider before/during the statistical analyses:  
@@ -279,7 +285,7 @@ Issues to consider before/during the statistical analyses:
 * Distance from the mainland may not be the best measure because it doesn't indicate the difficultly of reaching the island in all cases, from example Normanby isl. is right next to New Guinea which is very large and likely has a diverse population that can easily move to Normanby and back.
 
 
-## a. Distance
+## 10a. Distance
 
 ### i. Model Construction and Diagnostics
 
@@ -297,8 +303,6 @@ par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM) # diagnostic plots
 
 par(mfrow = c(1, 1))
-residualPlots(testLM) # curved therefore some non-linearity possible, although Tukey test p-value is non-significant
-
 qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
 shapiro.test(testLM$residuals) # W = 0.91825, p-value = 0.04092, indicates non-normality of resid
 hist(testLM$residuals, breaks = 10) #
@@ -341,8 +345,6 @@ par(mfrow = c(2, 2))
 plot(LM) # diagnostic plots
 
 par(mfrow = c(1, 1))
-residualPlots(LM) # curved therefore some non-linearity possible, although Tukey test p-value 0.5348 (H0 not rejected therefore linearity), and the spread of points looks okay
-
 qqPlot(LM$residuals, line = "quartiles") # normal residual distribution
 shapiro.test(LM$residuals) # W = 0.95512, p-value = 0.3723, indicates normality of residuals
 hist(LM$residuals, breaks = 10)
@@ -396,7 +398,7 @@ ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) +
   theme_light()
 ```
 
-## b. Area
+## 10b. Area
 
 ### i. Model Construction and Diagnostics
 
@@ -414,11 +416,11 @@ par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM2) # diagnostic plots
 
 par(mfrow = c(1, 1))
-residualPlots(testLM2) # curved therefore non-linearity possible, however Tukey test p-value 0.5124. Spread of points doesn't look good, there's lots of bunching 
+residualPlots(testLM2) # Spread of points doesn't look good, there's lots of bunching 
 
-qqPlot(testLM2$residuals, line = "quartiles") # normal dist, outlier point 19
-shapiro.test(testLM2$residuals) # W = 0.89572, p-value = 0.01482, indicates non-normality of residuals if alpha is 0.05
-hist(testLM2$residuals, breaks = 10)
+qqPlot(testLM2$residuals, line = "quartiles") # appears normal dist, outlier point 19
+shapiro.test(testLM2$residuals) # W = 0.89572, p-value = 0.01482, indicates non-normality of residuals if alpha is 0.05, I think this significant p-value is caused by point 19
+hist(testLM2$residuals, breaks = 10, xlim = c(-15,10))
 
 ncvTest(testLM2) # homoscedasticity test: Chisquare = 0.4593862, Df = 1, p = 0.49791, H0 of constant variance is not rejected, but scale location plot above (plot(testLM2)) still looks peculiar.
 
@@ -462,8 +464,6 @@ par(mfrow = c(2, 2)) # changing the number of plots visible at once
 plot(LM2) # diagnostic plots; relationship now linear and outliers are now less influential
 
 par(mfrow = c(1, 1))
-residualPlots(LM2) # curved line but Tukey test p-value 0.6773 which means linear relationship
-
 qqPlot(LM2$residuals, line = "quartiles") # normal 
 shapiro.test(LM2$residuals) # W = 0.98906, p-value = 0.9945, indicates normality of residuals
 hist(LM2$residuals, breaks = 10, xlim = c(-10,10))
@@ -526,7 +526,7 @@ ggplot(data = per.island, aes(x = log10(area_km2), y = perc.o, label = island)) 
 ```
  
 
-## c. Multiple Regression: both Distance and Area 
+## 10c. Multiple Regression: both Distance and Area 
 
 ### i. Model Construction and Diagnostics
 
@@ -558,7 +558,6 @@ par(mfrow = c(2, 2))
 plot(testLM3)
 
 par(mfrow = c(1,1))
-residualPlots(testLM3)
 hist(testLM3$residuals, breaks = 10, xlim = c(-10,10))
 
 qqPlot(testLM3$residuals, line = "quartiles") # normal
@@ -625,6 +624,9 @@ c2 <- glm(perc.o ~ km.from.ML + log(area_km2), data = z, family = gaussian(link 
 summary(c2) # intercept still significant, not km or area. AIC 117.88 (lower preferred when comparing models). Results the same as the linear model above.
 ```
 
+```{r how much variance model explains}
+with(summary(c2), 1 - deviance/null.deviance) # R^2 value of 0.4058967. This is not high therefore there may be additional variables to add to the model to explain the variance.
+```
 
 ### v. Model Plot
 
@@ -632,11 +634,11 @@ summary(c2) # intercept still significant, not km or area. AIC 117.88 (lower pre
 ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) + 
   geom_point(mapping = aes(colour = log10(area_km2)), size = 3) + 
   geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
-  scale_color_gradient(low = "red", high = "blue") +
+  scale_color_gradient(low = "red", high = "blue", name = "Area (log10 km²)") +
   geom_text(data = subset(per.island, 
     (perc.o < 80) | (km.from.ML < 5000 & perc.o > 90)), 
     hjust = -0.1, vjust = -0.8, size = 3) +
-  ggtitle("Effect of Island distance from Mainland on Homozygosity, including island area") +
+  ggtitle("Island Homozygosity change with Distance and Area increase") +
   xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
   theme_light()
 ```

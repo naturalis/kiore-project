@@ -4,7 +4,7 @@ author: "Grace Saville"
 date: "01/10/2021"
 output: pdf_document
 ---
-# Preamble 
+# 1. Preamble 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE, tidy.opts = list(width.cutoff = 70), tidy = TRUE)
@@ -18,7 +18,7 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# Loading the data
+# 2. Loading the data
 
 ```{r data loading}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
@@ -26,9 +26,10 @@ dim(data) # 370 rows 298 columns
 str(data)
 ```
 
-# Testing the dat2phylip() function
+# 3. Testing the dat2phylip() function
 ```{r testing}
 # x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
+
 # dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
 ```
 
@@ -41,7 +42,7 @@ After some experimenting, for Phylip files...
 * only letters from bases or amino acids allowed (?, e.g acdefghiklmnprstvwyz)
 
 
-# Replacing the SNP symbols with IUPAC Ambiguity code symbols
+# 4. Replacing the SNP symbols with IUPAC Ambiguity code symbols
 
 IUPAC Ambiguity code:  
 
@@ -60,26 +61,23 @@ IUPAC Ambiguity code:
 
 ```{r replacing with IUPAC code}
 copy <- data # making a copy
+table(unlist(copy[,-c(1:16)])) # ?, A:A, A:C, A:G, A:T, C:C, C:G, C:T, G:G, T:G, T:T
 
 copy[copy == "A:A"] <- "A"
 copy[copy == "T:T"] <- "T"
 copy[copy == "C:C"] <- "C"
 copy[copy == "G:G"] <- "G"
 copy[copy == "A:G"] <- "R"
-copy[copy == "G:A"] <- "R"
 copy[copy == "C:T"] <- "Y"
-copy[copy == "T:C"] <- "Y"
 copy[copy == "A:T"] <- "W"
-copy[copy == "T:A"] <- "W"
 copy[copy == "C:G"] <- "S"
-copy[copy == "G:C"] <- "S"
 copy[copy == "A:C"] <- "M"
-copy[copy == "C:A"] <- "M"
-copy[copy == "G:T"] <- "K"
 copy[copy == "T:G"] <- "K"
+
+table(unlist(copy[,-c(1:16)])) # ?, A, C, G, K, M, R, S, T, W, Y 
 ```
 
-# Adjusting the data frame for Phylip output function
+# 5. Adjusting the data frame for Phylip output function
 
 ```{r df adjustment}
 names(copy)

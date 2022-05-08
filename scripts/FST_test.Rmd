@@ -1,5 +1,5 @@
 ---
-title: "FST_prep_and_analysis"
+title: "FST Prep and Analysis Script"
 author: "Grace Saville"
 date: "26/04/2022"
 output: pdf_document
@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
-# Preamble 
+# 1. Preamble 
 
 ```{r libraries}
 library(corrplot)
@@ -21,7 +21,7 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# Prepping df
+# 2. Prepping the dataframe
 
 ```{r loading data}
 # load(".RData") # if necessary
@@ -54,7 +54,7 @@ copy <- x
 rm(x, coln) # removing excess objects
 ```
 
-# Producing the file necessary for PGDSpider program
+# 3. Producing the file necessary for PGDSpider program
 
 ```{r file prep}
 copy <- copy[order(copy$island, decreasing = FALSE), ] # ordering df alphabetically by island
@@ -80,7 +80,7 @@ popnames <- as.character(
     "pop = Kamaka", # 104:123
     "pop = Kayangel", # 124:138
     "pop = Late_Island", # 141:161
-    "pop = Mainland", # 29, 139, 140, 162, 349, 350 (including Luzon here)
+    "pop = Mainland", # 29, 139, 140, 162, 349, 350 ((including Luzon here because Luzon is part of the mainland cluster in the NeighborNet network)
     "pop = Malenge", # 163:174
     "pop = Mohotani", # 175:188
     "pop = Motukawanui", # 189:209
@@ -148,10 +148,9 @@ rm(i1, i2, foo, popnames, pops)
 rm(list = c(letters[seq(from = 1, to = 25)])) # removing excess objects
 ```
 
+At this stage PGDSpider program and Arlequin were used to convert the file produced and run tests on the data. The resulting output is used here for analysis.
 
-# Analysis
-
-## Loading the results files 
+# 4. Loading the results files for analysis
 
 ```{r loading results files}
 popnames <- as.character(
@@ -201,9 +200,11 @@ pv[upper.tri(pv, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)]
 rm(x)
 ```
 
-## Creating results df on which to base analyses
+# 5. Creating results dataframe on which to base analyses
 
-```{r fst df}
+## 5a. Converting FST matrix to dataframe
+
+```{r fst matrix to df}
 pwd.df <- pwd
 pwd.df[lower.tri(pwd.df, diag = TRUE)] <- NA # keeping only the upper triangle of each matrix
 
@@ -218,7 +219,9 @@ pwd.df <- na.omit(pwd.df)
 pwd.df <- unite(pwd.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
 ```
 
-```{r making geographic distance matrix}
+## 5b. Making Geopgraphic distance matrix
+
+```{r making geo distance matrix}
 longlat <- data[,c(8,11,12)]
 longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island
 longlat <- longlat[order(longlat$island.1, decreasing = FALSE),] # sorting alphabetically
@@ -246,6 +249,8 @@ geo.matrix <- distm(geo.matrix, fun = distGeo) # converting to pairwise distance
 dim(geo.matrix) # 26 26
 ```
 
+## 5c. Combining the FST and Geographic dataframes
+
 ```{r adding geo distances to fst df}
 colnames(geo.matrix) <- longlat[,1]
 rownames(geo.matrix) <- longlat[,1] # naming the rows and columns
@@ -269,23 +274,22 @@ pwd.df$geo.dist <- pwd.df$geo.dist/1000 # going from metres to km
 rm(longlat, geo.matrix, geo.df)
 ```
 
-## Saving outcomes
+## 5d. Saving outcomes
 
 ```{r saving}
 write.csv(pwd.df, "./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv", row.names = FALSE)
 write.csv(pv, "./Results/Arlequin_FST/FST_RStudio_pvalue_matrix.csv", row.names = FALSE)
 ```
 
-## Linear modelling
+# 6. Linear modelling
 
 ```{r loading data if necessary}
 pwd.df <- read.csv("./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv")
 ```
 
+## 6a. Test model 
 
-### i. Test model 
-
-```{r linear model}
+```{r test model creation}
 testLM <- lm(fst.dist ~ geo.dist, data = pwd.df) # model
 summary(testLM) # model results
 
@@ -293,12 +297,11 @@ plot(fst.dist ~ geo.dist, data = pwd.df)
 abline(coef = coef(testLM), col = 4, lwd = 2)
 ```
 
-```{r}
+```{r test model diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once 
 plot(testLM) # diagnostic plots
 
 par(mfrow = c(1,1))
-residualPlots(testLM) # linear relationship, Tukey test p-value 0.6207 therefore H0 linearity not rejected
 hist(testLM$residuals, breaks = 10, xlim = c(-1,1))
 
 qqPlot(testLM$residuals, line = "quartiles") # normal, possible outliers 132, 148
@@ -314,12 +317,12 @@ influenceIndexPlot(testLM) # outliers
 outlierTest(testLM) # 148: rstudent = -5.174788, unadjusted p-value = 4.2083e-07, Bonferroni p = 0.00012625
 ```
 
-* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot and cone-shaped residuals vs. fitted plot therefore non-constant variance, and 132 and 148 are potential issues.
+* Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot and cone-shaped residuals vs. fitted plot therefore non-constant variance, and 132 (New Guinea to Mainland) and 148 (Normanby Island to Mainland) are potential issues.
 
-### ii. Adjusted Model
+## 6b. Adjusted Model
 
 ```{r adjusted model building}
-z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 and 148 which are both negative FST values
+z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 (New_Guinea:Mainland) and 148 (Normanby_Island:Mainland) which are both negative FST values
 
 x <- lm(fst.dist ~ geo.dist, data = z) # creating model to take weights from
 wt <- 1 / lm(abs(x$residuals) ~ x$fitted.values)$fitted.values^2 # weighting residuals by how large they are
@@ -337,8 +340,6 @@ par(mfrow = c(2, 2)) # changing the number of plots visible at once
 plot(LM) # diagnostic plots: non-constant variance!
 
 par(mfrow = c(1, 1))
-residualPlots(LM) # Tukey test p-value 0.06849 therefore H0 linearity not rejected
-
 hist(LM$residuals, breaks = 10, xlim = c(-1,1))
 qqPlot(LM$residuals, line = "quartiles") # normal
 shapiro.test(LM$residuals) # W = 0.99402, p-value = 0.2898, indicates normality of residuals
@@ -350,7 +351,7 @@ influenceIndexPlot(LM) # outliers test, nothing concerning
 boxCox(LM) # recommended to stay as is
 ```
 
-### iii. Results
+## 6c. Results
 
 > Call:
 lm(formula = fst.dist ~ geo.dist, data = x, weights = wt)
@@ -378,10 +379,10 @@ F-statistic: 62.66 on 1 and 296 DF,  p-value: 4.959e-14
 * Even spread of residuals around 0
 * t-values are far from 1 and both are significant
 * Residual standard error is very high compared to the estimate
-* Only approx. 16% of the variance of fst.dist can de explained by geo.dist!
+* Only approx. 17% of the variance of fst.dist can de explained by geo.dist!
 
 
-### Plots 
+# 7. Plots 
 
 ```{r correlogram}
 library(corrplot)

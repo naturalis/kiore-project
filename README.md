@@ -40,7 +40,7 @@ This folder contains raw data files, cleaned data files, program-specific format
 	- hwe_allresults_14032022.txt      
 	- hwe_results_by_island_14032022
 	- HWEanalysis_allresults_tidy.csv  
-	- pairwise_fst_results_28032022.txt
+	- 
 	- ratsSNPs_arl_input.js            
 	- ratsSNPs_arl_input.xml
 	- ratsSNPs_arl_input_main.htm      
@@ -139,8 +139,41 @@ At this stage I had an Arlequin input file (.arp file format) and a STRUCTURE in
 	d. Start (then upon completion) View Results
 7. Copied the output from the html (or xml) to a text file and saved.
 
-Structure...
-	Reference:
+For Structure...
+8. I downloaded STRUCTURE verion 2.3.4, Joly 2012, from https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
+	Reference: Pritchard, J. K., Stephens, M., and Donnelly, P. (2000). Inference of population structure using
+multilocus genotype data. Genetics, 155:945–959
+9. 	a. File -> New project
+	b. Fill in settings...
+		Step 1 of 4: Project Information
+			Name: ratsSNPs_struc_preHWE
+			Project Path: ...kiore-project\results\STRUCTURE
+			Data File: C: ...kiore-project\data\STRUCTURE\ratsSNPs_Structure_input_preHWE.str
+		Step 2 of 4: Information of Input dataset
+			Number of Individuals: 379
+            Number of Loci: 282
+            Ploidy: 2
+            Missing Data is Represented by: -9
+		Step 3 of 4: Format of input dataset
+			Check row of data names (rest unckecked)
+		Step 4 of 4: Format of input dataset (cont'd)
+			Check Individual ID for each individual
+			Check Putative population origin for each individual (rest unckecked)
+		Press finish
+	c. Parameter set -> New 
+	b. Filled in settings...
+		Run length
+			Length of Burnin period: 5,000
+			Number of MCMC reps after Burnin: 50,000
+		Ancestry Model         
+			Check use Admixture Model
+		Advanced   
+			Check Compute the Probability of the Data (for estimating K)
+            Frequency of Metropolis update for Q: 10
+		Press OK
+	d. Project -> Start a Job -> K = 2 to K = 25
+10. Zipped all the output in the results file into a zipped file
+11. Uploaded the zip file to http://taylor0.biology.ucla.edu/structureHarvester/#
 
 #### Creating a NeighborNet network
 Using RStudio and SplitsTree

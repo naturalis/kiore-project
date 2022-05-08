@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
 ```
 
-# Preamble
+# 1. Preamble
 
 ```{r libraries}
 library(ade4)
@@ -21,15 +21,19 @@ getwd()
 setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# Loading the data
+# 2. Loading the data
 
 ```{r loading data}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 gen.matrix <- as.matrix(read.delim("./data/SplitsTree/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE))
 # Make sure the text file is the distances only, remove any extras e.g. column vector at bottom of file
+
+dim(data)
 ```
 
-# Creating geographical distance matrix
+# 3. Creating geographical distance matrix
+
+**ONLY NEED TO RUN THE FOLLOWING CODE CHUNK ONCE AND THEN SAVE**
 
 Using the mapview funtion in the last code chunk of this script I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign, and that Reiono and Honuea have the same coordinates even though they're different islands. Fixing that here:
 ```{r longitude adjustment}
@@ -66,6 +70,7 @@ write.csv(data, "./data/RStudio/ratsSNPs_clean.csv", row.names = FALSE)
 
 (only need to do the above code once since it saves the edited df to file)
 
+# 4. Setting up longitudes and latitudes
 
 Different distance functions:
 
@@ -88,18 +93,20 @@ geo.dist <- as.dist(geo.matrix, diag = TRUE, upper = TRUE) # converting to dist 
 # upper = TRUE #includes upper triangle
 ```
 
-# Creating genetic distance matrix
+# 5. Creating genetic distance matrix
 
 ```{r genetic distance matrix}
 dim(gen.matrix) # 370 370
 gen.dist <- as.dist(gen.matrix, diag = TRUE, upper = TRUE) # converting to dist object
 ```
 
-# Mantel test
+# 6. Mantel test
 
 ```{r mantel test}
-mantel.rtest(gen.dist, geo.dist, nrepet = 999)
-
+r1 <- mantel.rtest(gen.dist, geo.dist, nrepet = 999)
+r1
+plot(r1$plot$hist, main = "Mantel test", xlim = c(-0.1, 0.1)) # plotting simulated p-values
+sum(r1$plot$hist$counts)
 ```
 
 **Results:**
@@ -113,9 +120,9 @@ Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)
 Simulated p-value: 0.001   
 Alternative hypothesis: greater   
 
-> Std.Obs: 23.7703702908  
-Expectation: -0.0004626768  
-Variance: 0.0004410815 
+> Std.Obs: 2.370409e+01  
+Expectation: 5.514360e-04  
+Variance: 4.417514e-04 
 
 * -1 suggests strong negative correlation, e.g. closer islands mean further genetically or further islands means closer genetically
 * 0 suggests no correlation, e.g. genetic difference is not correlated to island distance
@@ -155,7 +162,7 @@ Alternative hypothesis: greater
 Expectation: -0.0002961658  
 Variance: 0.0001121521  
 
-# Creating pairwise distances dataframe
+# 7. Creating pairwise distances dataframe
 
 ```{r making pairwise distance summary df}
 specimens <- read.delim("./data/SplitsTree/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
@@ -252,14 +259,13 @@ getwd()
 write.csv(dist.summary, "./data/RStudio/gen_geo_distance_matrices_df.csv", row.names = FALSE)
 ```
 
-
-# Linear Modelling
+# 8. Linear Modelling
 
 ```{r reloading data if necessary}
 dist.summary <- read.csv("./data/RStudio/gen_geo_distance_matrices_df.csv")
 ```
 
-## i. Test Model
+## 8a. Test Model
 
 ```{r test model 1 building}
 testLM <- lm(gen.dist ~ geo.dist, data = dist.summary) # model
@@ -274,7 +280,6 @@ par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM) # # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
 
 par(mfrow = c(1, 1))
-residualPlots(testLM) 
 
 qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
 shapiro.test(testLM$residuals) # doesn't work, sample size must be between 3 and 5000
@@ -289,8 +294,15 @@ outlierTest(testLM) # lists 10 different points which could be an issue (all ove
 boxCox(testLM) # recommended log transformation
 ```
 
+I decided to do a brief check of observed correlation to compare with the Mantel test results, using the above dataframe;
+```{r additonal correlation test}
+cor.test(dist.summary$gen.dist, dist.summary$geo.dist, method = "pearson") # should be taken with a grain of salt since the residual variance is not constant:
+# t = 134.54, df = 65067, p-value < 2.2e-16
+# 95 percent confidence interval: 0.4604831 0.4725059
+# sample estimates: cor 0.466516 
+```
 
-## ii. Adjusted Model
+## 8b. Adjusted Model
 
 I attempted to transform the data (e.g. sqrt, log10) to achieve normal residual distribution however it was not successful so I will build a GLM instead.
 
@@ -315,7 +327,7 @@ ks.test(GLM$residuals, 'pnorm') #
 hist(GLM$residuals, breaks = 50)
 ```
 
-## iii. GLM Results
+## 8c. GLM Results
 
 > Call:
 glm(formula = gen.dist ~ geo.dist, family = Gamma(link = "identity"), data = z)
@@ -343,6 +355,23 @@ AIC: -117995
 
 > Number of Fisher Scoring iterations: 5
 
+```{r how much variance model explains}
+with(summary(GLM), 1 - deviance/null.deviance) # R^2 value of 0.2584382. This is not high therefore there may be additional variables to add to the model to explain the variance.
+```
+
+# 9. Looking at the genetically closest island pairs
+```{r top 10 genetically closest islands}
+dist.summary <- dist.summary[order(dist.summary$geo.dist, decreasing = FALSE),] # sorting by geo dist
+dist.summary <- dist.summary[order(dist.summary$gen.dist, decreasing = FALSE),] # sorting by gen dist
+
+head(dist.summary[!duplicated(dist.summary$islands.combo),], n = 15) 
+
+
+```
+
+
+# 10. Taking a closer look at islands with high distance/close genetics
+
 ```{r examining values under the regression line}
 fv <- as.vector(GLM$fitted.values)
 dist.summary <- cbind(dist.summary, fv)
@@ -357,9 +386,9 @@ rm(i)
 
 plot(gen.dist ~ geo.dist, data = under.fv) # checking, should be all values up to the regression line
 
-all.combos <- count(dist.summary$islands.combo)
-under.fv.combos <- count(under.fv$islands.combo)
-combo.totals <- merge(all.combos, under.fv.combos, by = "x", all = TRUE)
+all.combos <- count(dist.summary, islands.combo) # if doesn't work try $ instead of comma
+under.fv.combos <- count(under.fv, islands.combo)
+combo.totals <- merge(all.combos, under.fv.combos, by = "islands.combo", all = TRUE)
 colnames(combo.totals) <- c("combo", "all", "below.line")
 rm(all.combos, under.fv.combos)
 combo.totals$perc.under <- round(((combo.totals$below.line / combo.totals$all) * 100), 3)
@@ -367,20 +396,20 @@ combo.totals[is.na(combo.totals)] <- 0
 
 # perc.under is the percentage of the specimens with genetic distances (between the two stated islands) which are less than the average genetic distance/point on the regression line at that geographic distance.
 
-combo.totals$combo[combo.totals$perc.under == 100]
+x <- combo.totals$combo[combo.totals$perc.under == 100]
+x <- as.data.frame(x)
+x <- tidyr::separate(x, sep = ":", col = x, into = c("isl1", "isl2"))
 ```
 
-# Plots
+# 11. Plots
 
 ```{r plots}
 ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) + 
   geom_point(shape = 1, colour = "grey") + 
   geom_smooth(method = "lm") + 
-  geom_quantile(quantiles = c(0.05, 0.95)) +
   ggtitle("Correlation between Geographic and Genetic Distance between Islands") +
-  xlab("Geographic Distance between 2 islands (km)") + ylab("Genetic Distance between 2 islands") +
+  xlab("Geographic Distance between two islands (km)") + ylab("Genetic Distance between two islands") +
   theme_light()
-# linear smooth regression line and 5/95 quantile lines added
 
 # log transformed:
 ggplot(data = dist.summary, aes(x = (geo.dist)^2, y = gen.dist)) + 
@@ -391,24 +420,62 @@ ggplot(data = dist.summary, aes(x = (geo.dist)^2, y = gen.dist)) +
   theme_light()
 ```
 
-# Experimenting with plotting the coordinates on a map (in progress)
+# 11. Plotting the coordinates on a map
 
-```{r map plotting}
-names(data)
-longlat <- data[,c(1,8,11,12)]
-longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island 
-longlat <- longlat[,-1]
-longlat
+```{r mapping}
+library(maps) 
 
-library(sf)
-x <- st_as_sf(longlat, coords = c("geo_long", "geo_lat"),  crs = 4326) # 4326 is WGS84 Coordinate Reference System. could try for pacific: 9191, 3994, 8909, 3832
+head(names(data), n = 20) # need "geo_lat" "geo_long" 
+longlat <- data[,c(8,11,12)]
+longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island
+head(longlat) # checking correct columns are used
+dim(longlat)
+rownames(longlat) <- 1:26
 
-library(mapview)
-mapview(x, grid = FALSE, map.types = "OPNVKarte", legend = FALSE, native.crs = FALSE)
+longlat$island.1
+longlat[14,1] <- "Rakiura"
+longlat[18,1] <- "Rimatuu"
+longlat[19,1] <- "Aotea"
+
+longlat[longlat$geo_long < 0,] # only longitude values up to 180 are plotting, rest is blank. Can try fixing this by adding 360 to all the negative longitude points
+longlat[8,3] <- longlat[8,3] + 360
+longlat[9,3] <- longlat[9,3] + 360
+longlat[11,3] <- longlat[11,3] + 360
+longlat[13,3] <- longlat[13,3] + 360
+longlat[15,3] <- longlat[15,3] + 360
+longlat[16,3] <- longlat[16,3] + 360
+longlat[18,3] <- longlat[18,3] + 360
+longlat[22,3] <- longlat[22,3] + 360
+
+
+map("world2", # "world" over Africa, "world2" over Pacific
+    xlim = c(90,240), # x axis limits
+    ylim = c(-70,70),
+    fill = TRUE, 
+    col = "grey", # fill colour
+    # bg = "azure2", # background colour
+    border = NA, # country borders
+    wrap = TRUE # tuck map into axes
+    ) 
+map.axes() # adds axes
+points(longlat$geo_long, longlat$geo_lat, 
+       col = "red", cex = 1, pch = 20)
+
+# trying with ggplot
+library(ggrepel)
+ggplot(longlat, aes(x = geo_long, y = geo_lat, label = island.1)) +   
+  borders("world2", colour = NA, fill = "wheat1")  +
+  geom_point(color = "red", size = 2) +
+  scale_x_continuous(limits = c(100, 240)) +
+  scale_y_continuous(limits = c(-50, 35)) +
+  theme(panel.background = element_rect(fill = "azure1", colour = "azure1"), 
+        axis.text = element_blank(), 
+        axis.title = element_blank(),
+        axis.ticks = element_blank()) +
+  geom_text_repel(size = 3, point.size = 1, min.segment.length = 0.25) +
+  ggtitle("Map of Islands Sampled for Polynesian Rats")
+
 ```
-
-For the code above I would need to find an alternative to mapview because there appears to be a bug where the legend colours don't match up to the map point colours
-
 
 
 
