@@ -1,34 +1,36 @@
 ---
 title: "Creating file for NeighborNet Treebuilding"
 author: "Grace Saville"
-date: "01/10/2021"
+date: "16/05/2021"
 output: pdf_document
 ---
-# 1. Preamble 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE, tidy.opts = list(width.cutoff = 70), tidy = TRUE)
+```{r setup, include = FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE, warning = FALSE)
+opts_knit$set(root.dir = "C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-```{r libraries}
+```{r libraries, include = FALSE}
 library(tidyr)
 library(ape)
 library(phylotools)
-getwd()
-setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+# getwd()
+# setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 2. Loading the data
+# 1. Loading the data
 
-```{r data loading}
+```{r loading}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 dim(data) # 370 rows 298 columns
-str(data)
 ```
 
-# 3. Testing the dat2phylip() function
+# 2. Testing the dat2phylip() function
 ```{r testing}
-# x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) # dummy df
+# x <- data.frame(a = c("asdfghjkl1", "asdf2ghjkl", "asdf3ghjkl", "asdfghjkl4"), 
+# b = c("CTAGTGACCCGTAG","TGACCCGTTAGAAC", "TGACTCTTTAGAAC", "TTTCACGTTGAGAC")) 
+# dummy df
 
 # dat2phylip(x, outfile = "test.phy") # testing this function that saves phylip files
 ```
@@ -42,7 +44,7 @@ After some experimenting, for Phylip files...
 * only letters from bases or amino acids allowed (?, e.g acdefghiklmnprstvwyz)
 
 
-# 4. Replacing the SNP symbols with IUPAC Ambiguity code symbols
+# 3. Replacing the SNP symbols with IUPAC Ambiguity code symbols
 
 IUPAC Ambiguity code:  
 
@@ -61,7 +63,7 @@ IUPAC Ambiguity code:
 
 ```{r replacing with IUPAC code}
 copy <- data # making a copy
-table(unlist(copy[,-c(1:16)])) # ?, A:A, A:C, A:G, A:T, C:C, C:G, C:T, G:G, T:G, T:T
+kable(table(unlist(copy[,-c(1:16)])))
 
 copy[copy == "A:A"] <- "A"
 copy[copy == "T:T"] <- "T"
@@ -74,18 +76,20 @@ copy[copy == "C:G"] <- "S"
 copy[copy == "A:C"] <- "M"
 copy[copy == "T:G"] <- "K"
 
-table(unlist(copy[,-c(1:16)])) # ?, A, C, G, K, M, R, S, T, W, Y 
+kable(table(unlist(copy[,-c(1:16)])))
 ```
 
-# 5. Adjusting the data frame for Phylip output function
+# 4. Adjusting the data frame for Phylip output function
 
 ```{r df adjustment}
 names(copy)
-copy <- copy[,-c(2:16)] # removing the rows with information other than the species key and codes
-copy <- unite(copy, bases, -1, sep = "", remove = TRUE) # merging all the base columns into one
+copy <- copy[,-c(2:16)] # removing the rows with information other than the 
+# species key and codes
+copy <- unite(copy, bases, -1, sep = "", remove = TRUE) # merging all the base 
+# columns into one
 ```
 
-```{r phylip file creation}
+```{r phylip file creation, eval = FALSE}
 dat2phylip(copy, outfile = "./data/SplitsTree/ratsSNPs_SplitsTree_input.phy") 
 # can be opened by splitstree when configured as proteins/amino acids
 ```

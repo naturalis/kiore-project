@@ -1,44 +1,43 @@
 ---
 title: "Testing the Homozygosity per Island"
 author: "Grace Saville"
-date: "01/02/2022"
+date: "16/05/2022"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = "C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 1. Preamble 
-
-```{r libraries}
+```{r libraries, include = FALSE}
 library(stringr)
 library(dplyr)
 library(ggplot2)
 library(car)
-getwd()
-setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+library(geosphere)
+# getwd()
+# setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 2. Dataset loading
+# 1. Dataset loading
 
-```{r loading data}
+```{r loading-data}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 
 copy <- data # making a copy of the data
-colnames(copy)
+head(colnames(copy), n = 20)
 copy <- copy[,-c(2:16)] # removing unnecessary columns for this analysis
 ```
 
-# 3. Replaceing SNP's with symbols for heterozygous and homozygous
+# 2. Replaceing SNP's with symbols for heterozygous and homozygous
 
-```{r Setting up data}
+```{r Setting-up}
 dim(copy) # 370 rows 283 columns
-str(copy)
 unique(unlist(copy[,17:283])) # checking what SNP combinations are present
-# "?"   "A:A" "G:G" "A:G" "T:T" "A:T" "C:C" "C:T" "T:G" "C:G" "A:C"
 
-het <- c("A:G", "A:T", "C:T", "T:G", "C:G", "A:C") # vector of heterozygous combinations
+het <- c("A:G", "A:T", "C:T", "T:G", "C:G", "A:C") # vector heterozygous combinations
 hom <- c("G:G", "A:A", "C:C", "T:T") # vector of homozygous combinations
 
 # Replacing specific combos
@@ -49,11 +48,10 @@ for (i in 1:nrow(copy)){
 
 rm(i)
 
-str(copy)
 copy[copy == "?"] <- NA # replacing ? with NA's 
 ```
 
-# 4. Calculating heterozygous and homozygous totals per specimen
+# 3. Calculating heterozygous and homozygous totals per specimen
 
 ```{r totals per specimen}
 o.freq <- vector()
@@ -71,10 +69,18 @@ for (i in 1:370) {
 
 rm(i)
 
-per.specimen <- data.frame(copy$island, o.freq, e.freq, na.freq) # making a df with the freq totals
-perc.o <- round(as.vector((per.specimen$o.freq / (per.specimen$o.freq + per.specimen$e.freq)) * 100), digits = 3) # percentage without incl missing
+per.specimen <- data.frame(copy$island, o.freq, e.freq, na.freq) # making a df
+# with the freq totals
+perc.o <- round(as.vector((
+    per.specimen$o.freq / (per.specimen$o.freq + per.specimen$e.freq)
+  ) * 100), digits = 3) # percentage without incl missing
 per.specimen$perc.o <- perc.o
-perc.missing <- round(as.vector((per.specimen$na.freq / (per.specimen$o.freq + per.specimen$e.freq + per.specimen$na.freq)) * 100), digits = 3) # percentage of missing data in row/specimen
+
+perc.missing <- round(as.vector((
+    per.specimen$na.freq / (
+      per.specimen$o.freq + per.specimen$e.freq + per.specimen$na.freq)
+    ) * 100), digits = 3) # percentage of missing data in row/specimen
+
 per.specimen$perc.missing <- perc.missing
 
 rm(o.freq, e.freq, na.freq, perc.o, perc.missing)
@@ -82,13 +88,14 @@ rm(o.freq, e.freq, na.freq, perc.o, perc.missing)
 str(per.specimen)
 ```
 
-# 5. Calculating heterozygous and homozygous totals per island
+# 4. Calculating heterozygous and homozygous totals per island
 
-```{r creating island dfs}
-data <- data[order(data$island, decreasing = FALSE),] # ordering df alphabetically by island
-names(data)
-data[c(grep("Mainland", data$island.1)),c(1, 8)] # checking which populations fall in the mainland category
-unique(data$island)
+```{r island-dfs}
+data <- data[order(data$island, decreasing = FALSE),] # ordering df alphabetically
+head(names(data), n = 20)
+data[c(grep("Mainland", data$island.1)),c(1, 8)] # checking which populations fall 
+# in the mainland category
+# unique(data$island)
 shortpopnames <- as.character(
   c(
     "aotea",
@@ -120,11 +127,13 @@ shortpopnames <- as.character(
     "thailand",
     "wake"
   )
-) # writing shortened names as is in the data df so I can use the character strings with grep()
+) # writing shortened names as is in the data df so I can use the character
+# strings with grep()
 
 # splitting the data df into df objects by island:
 for (i in 1:length(shortpopnames)) {
-  y <- as.vector(grep(shortpopnames[i], copy[,1], ignore.case = TRUE, value = FALSE))
+  y <- as.vector(grep(
+    shortpopnames[i], copy[,1], ignore.case = TRUE, value = FALSE))
   assign(paste(shortpopnames[i]), copy[y,])
 }
 rm(y, i)
@@ -133,7 +142,7 @@ rm(y, i)
 mainland <- rbind(cambodia, thailand, laos)
 rm(cambodia, thailand, laos)
 shortpopnames
-shortpopnames <- shortpopnames[-c(3, 11, 27)] # removing the names now in mainland category
+shortpopnames <- shortpopnames[-c(3, 11, 27)] # removing the names now in mainland
 shortpopnames <- append(shortpopnames, "mainland")
 
 # double checking the dfs have the correct specimens per island:
@@ -147,7 +156,7 @@ rm(y)
 
 ```
 
-```{r calculating totals}
+```{r calculating-totals}
 # counting values:
 per.island <- data.frame()
 for (i in 1:length(shortpopnames)) {
@@ -161,14 +170,20 @@ rm(o, e, na, vec, i)
 
 colnames(per.island) <- c("island", "specimens.based.on", "o.freq", "e.freq", "na.freq") # renaming columns
 str(per.island)
-per.island$o.freq <- as.integer(per.island$o.freq) # changing the numbers from characters to integers
+per.island$o.freq <- as.integer(per.island$o.freq) # changing the numbers from 
+# characters to integers
 per.island$e.freq <- as.integer(per.island$e.freq)
 per.island$na.freq <- as.integer(per.island$na.freq)
 
 # calculating percentages:
-perc.o <- round(as.vector((per.island$o.freq / (per.island$o.freq + per.island$e.freq)) * 100), digits = 3) # percentage without incl missing
+perc.o <- round(as.vector((
+  per.island$o.freq / (per.island$o.freq + per.island$e.freq)) * 100), digits = 3) 
+# percentage without incl missing
 per.island$perc.o <- perc.o
-perc.missing <- round(as.vector((per.island$na.freq / (per.island$o.freq + per.island$e.freq + per.island$na.freq)) * 100), digits = 3) # percentage of missing data in row/specimen
+perc.missing <-
+  round(as.vector((
+    per.island$na.freq / (per.island$o.freq + per.island$e.freq + per.island$na.freq)
+  ) * 100), digits = 3) # percentage of missing data in row/specimen
 per.island$perc.missing <- perc.missing
 
 rm(perc.o, perc.missing, het, hom)
@@ -176,38 +191,44 @@ rm(list = shortpopnames)
 
 ```
 
-# 6. Saving
+# 5. Saving
 
-```{r saving results}
-getwd()
-write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.names = FALSE)
+```{r saving-results}
+# getwd()
+# write.csv(per.island, "./results/heterozygosity_testing_results_table.csv", row.names = FALSE)
 ```
 
-# 7. Considering island size and distance from mainland
+# 6. Considering island size and distance from mainland
 
-```{r loading island size}
-island.km <- read.csv("./data/island_size_data.csv", header = TRUE)
-head(island.km)
+```{r loading-island-size}
+island.km <- read.csv("./data/Raw_data/island_size_data.csv", header = TRUE)
+head(island.km, n = 10)
 island.km <- island.km[,c(2, 4)]
-island.km <- island.km[order(island.km$ISLAND, decreasing = FALSE),] # sorting alphabetically
+island.km <- island.km[order(island.km$ISLAND, decreasing = FALSE),] # sorting
 ```
 
-```{r island distance from mainland}
+```{r island-distance}
 distance.from.ML <- data[,c(1,8,11,12)]
-distance.from.ML <- distance.from.ML[!duplicated(distance.from.ML$island.1),] # keeping only 1 coordinate for each island
-distance.from.ML <- distance.from.ML[order(distance.from.ML$island.1, decreasing = FALSE),] # sorting alphabetically
-row.names(distance.from.ML) <- seq(nrow(distance.from.ML)) # renaming row numbers to be sequential
-distance.from.ML # checking 
+distance.from.ML <- distance.from.ML[!duplicated(distance.from.ML$island.1),] 
+# keeping only 1 coordinate for each island
+distance.from.ML <- distance.from.ML[
+  order(distance.from.ML$island.1, decreasing = FALSE),] # sorting alphabetically
+row.names(distance.from.ML) <- seq(nrow(distance.from.ML)) # renaming row numbers 
+# to be sequential
+head(distance.from.ML) # checking 
 
 #shortening some of the long island names to match what is already in the island.km df:
 distance.from.ML[1,2] <- "Aotea"
 distance.from.ML[20,2] <- "Rakiura"
 distance.from.ML[22,2] <- "Rimatuu"
 
-#decided to keep Cambodia as the mainland coordinates, will use this as the base for distance from mainland
-distance.from.ML <- distance.from.ML[,-1] # removing specimen ID column since no longer necessary
+#decided to keep Cambodia as the mainland coordinates, will use this as the 
+# base for distance from mainland
+distance.from.ML <- distance.from.ML[,-1] # removing specimen ID column since 
+# no longer necessary
+```
 
-library(geosphere)
+```{r}
 km.from.ML <- vector()
 for (i in 1:nrow(distance.from.ML)) {
   x <- distGeo(as.vector(distance.from.ML[13,c(3,2)]), as.vector(distance.from.ML[i,c(3,2)]))
@@ -218,15 +239,15 @@ km.from.ML <- km.from.ML / 1000 # converting from metres to kilometres
 distance.from.ML$km.from.ML <- km.from.ML # adding the kms to the distance df
 
 rm(i, x, km.from.ML)
-
 ```
 
-# 8. Merging the dataframes for easier analysis
+# 7. Merging the dataframes for easier analysis
 
-```{r merging the different dfs}
+```{r merging-dfs}
 names(island.km)
 names(distance.from.ML)
-island.km <- merge(island.km, distance.from.ML, by.x = "ISLAND", by.y = "island.1", all = TRUE)
+island.km <- merge(
+  island.km, distance.from.ML, by.x = "ISLAND", by.y = "island.1", all = TRUE)
 
 rm(distance.from.ML)
 
@@ -264,17 +285,18 @@ per.island$island <- c(
 per.island <- merge(per.island, island.km, by.x = "island", by.y = "ISLAND", all = TRUE)
 ```
 
-# 9. Saving again 
+# 8. Saving again 
 
-```{r saving results again}
-getwd()
-write.csv(per.island, "./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", row.names = FALSE)
+```{r saving-results-again}
+# getwd()
+# write.csv(per.island, "./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", row.names = FALSE)
 ```
 
-# 10. Linear regression and Plots
+# 9. Linear regression and Plots
 
-```{r loading the data again if necessary}
-per.island <- read.csv("./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", header = TRUE)
+```{r loading-data-again}
+per.island <- read.csv(
+  "./results/RStudio_Homozygosity/homozygosity_testing_results_table.csv", header = TRUE)
 ```
 
 Issues to consider before/during the statistical analyses:  
@@ -285,11 +307,11 @@ Issues to consider before/during the statistical analyses:
 * Distance from the mainland may not be the best measure because it doesn't indicate the difficultly of reaching the island in all cases, from example Normanby isl. is right next to New Guinea which is very large and likely has a diverse population that can easily move to Normanby and back.
 
 
-## 10a. Distance
+## 9a. Distance
 
 ### i. Model Construction and Diagnostics
 
-```{r test model 1 building}
+```{r test-model-1-building}
 testLM <- lm(perc.o ~ km.from.ML, data = per.island) # model
 
 plot(perc.o ~ km.from.ML, data = per.island)
@@ -298,23 +320,23 @@ abline(coef = coef(testLM), col = 4, lwd = 2)
 summary(testLM) # model results
 ```
 
-```{r test model 1 diagnostics}
+```{r test-model-1-diagnostics}
 par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM) # diagnostic plots
 
 par(mfrow = c(1, 1))
 qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
-shapiro.test(testLM$residuals) # W = 0.91825, p-value = 0.04092, indicates non-normality of resid
+shapiro.test(testLM$residuals) # indicates non-normality of resid
 hist(testLM$residuals, breaks = 10) #
 
-ncvTest(testLM) # homoscedasticity test: Chisquare = 5.719721, Df = 1, p = 0.016775, H0 of constant variance is rejected
+ncvTest(testLM) # homoscedasticity test: H0 of constant variance is rejected
 
 influenceIndexPlot(testLM) # outliers
 # Cooks distances: none larger than 0.5, 
 # Studentised residuals: point 18 less than -3
 # Bonferroni p-value: point 18 smaller then 0.05, 
 # Hat-values: point 13 influential, higher than 1
-outlierTest(testLM) # 18: rstudent = -3.479726, unadjusted p-value = 0.0020257, Bonferroni p = 0.052668
+outlierTest(testLM) 
 
 boxCox(testLM) # suggests sqrt transformation
 ```
@@ -330,7 +352,7 @@ boxCox(testLM) # suggests sqrt transformation
 
 I have decided to remove the Mainland point for several reasons; it is an outlier with a high leverage and a value of 0, also not valuable since the Mainland is the reference point, not a new value. Testing removing 18 and 19 (New Guinea and Normanby island) saw an improvement in normality, which makes the model more reliable, however I don't think they are true outliers outside of the dataset, so the results from this model will come with this caveat. Additionally, New Guinea and Normanby island are based off of 3 and 1 specimen respectively, which mean the points may not represent their populations accurately.
 
-```{r adjusted model 1 building}
+```{r adjusted-model-1-building}
 z <- per.island[-c(13, 18, 19),] # removing points mentioned
 LM <- lm(perc.o ~ km.from.ML, data = z) # model
 
@@ -340,46 +362,23 @@ abline(coef = coef(LM), col = 4, lwd = 2)
 summary(LM) # model results
 ```
 
-```{r adjusted model 1 diagnostics}
+```{r adjusted-model-1-diagnostics}
 par(mfrow = c(2, 2))
 plot(LM) # diagnostic plots
 
 par(mfrow = c(1, 1))
 qqPlot(LM$residuals, line = "quartiles") # normal residual distribution
-shapiro.test(LM$residuals) # W = 0.95512, p-value = 0.3723, indicates normality of residuals
+shapiro.test(LM$residuals) # indicates normality of residuals
 hist(LM$residuals, breaks = 10)
 
-ncvTest(LM) # homoscedasticity test: Chisquare = 2.469013, Df = 1, p = 0.11611, H0 of constant variance is not rejected
+ncvTest(LM) # homoscedasticity test: H0 of constant variance is not rejected
 
 influenceIndexPlot(LM) # nothing overly concerning
-outlierTest(LM) # 10: rstudent = 2.472633, unadjusted p-value = 0.022509, Bonferroni p = 0.5177
+outlierTest(LM)
 # not significant              
 ```
 
 The distribution of residuals is now normal, although there appears to be some level of heteroscedasticity visible in the plots (residuals vs. fitted, scale-location, residualPlot) even though the ncv test does not reject HO of constant variance of the residuals. I am not too concerned with this because the sample size is small and I do not want to over-analyse the diagnostics when my goal is merely to check for a correlation. 
-
-
-### iii. Results  
-
-> Residuals:  
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:|
-|-4.4315|-2.2204|-0.2978|2.3458|5.9795|
-
-> Coefficients:  
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|86.95|1.379|63.035|< 2e-16 ***|
-|km.from.ML|0.0005221|0.0001509|3.459|0.00235 **|
-
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1  
-
-> Residual standard error: 2.858 on 21 degrees of freedom  
-Multiple R-squared:  0.363  
-Adjusted R-squared:  0.3326   
-F-statistic: 11.96 on 1 and 21 DF,  p-value: 0.002349  
 
 * Higher t-value is generally more significant (above 2), related to p-value. High enough here.
 * The residual standard error is very low compared to the intercept estimate, which is ideal.
@@ -388,21 +387,27 @@ F-statistic: 11.96 on 1 and 21 DF,  p-value: 0.002349
 
 ### vi. Model Plot
 
-```{r lm with distance plot}
-ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) + 
-  geom_point(colour = "red", size = 3) + 
+```{r lm-with-distance-plot}
+ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) +
+  geom_point(colour = "red", size = 3) +
   geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
-  geom_text(data = subset(per.island, km.from.ML < 6500 & (perc.o < 80 | perc.o > 90)), hjust = 0.1, vjust = -0.8, size = 3) +
+  geom_text(
+    data = subset(per.island, km.from.ML < 6500 &
+                    (perc.o < 80 | perc.o > 90)),
+    hjust = 0.1,
+    vjust = -0.8,
+    size = 3
+  ) +
   ggtitle("Effect of Island distance from Mainland on Homozygosity") +
   xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
   theme_light()
 ```
 
-## 10b. Area
+## 9b. Area
 
 ### i. Model Construction and Diagnostics
 
-```{r test model 2 building}
+```{r test-model-2-building}
 testLM2 <- lm(perc.o ~ area_km2, data = per.island) # model
 
 plot(perc.o ~ area_km2, data = per.island) # points clustered in small area_km2
@@ -411,7 +416,7 @@ abline(coef = coef(testLM2), col = 4, lwd = 2)
 summary(testLM2) # model results
 ```
 
-```{r test model 2 diagnostics}
+```{r test-model-2-diagnostics}
 par(mfrow = c(2, 2)) # changes the number of plots visible at once
 plot(testLM2) # diagnostic plots
 
@@ -419,16 +424,18 @@ par(mfrow = c(1, 1))
 residualPlots(testLM2) # Spread of points doesn't look good, there's lots of bunching 
 
 qqPlot(testLM2$residuals, line = "quartiles") # appears normal dist, outlier point 19
-shapiro.test(testLM2$residuals) # W = 0.89572, p-value = 0.01482, indicates non-normality of residuals if alpha is 0.05, I think this significant p-value is caused by point 19
+shapiro.test(testLM2$residuals) # indicates non-normality of residuals if alpha is 0.05, 
+# I think this significant p-value is caused by point 19
 hist(testLM2$residuals, breaks = 10, xlim = c(-15,10))
 
-ncvTest(testLM2) # homoscedasticity test: Chisquare = 0.4593862, Df = 1, p = 0.49791, H0 of constant variance is not rejected, but scale location plot above (plot(testLM2)) still looks peculiar.
+ncvTest(testLM2) # homoscedasticity test: H0 of constant variance is not rejected, 
+# but scale location plot above (plot(testLM2)) still looks peculiar.
 
 influenceIndexPlot(testLM2) # outliers
 # Cooks distances: points 2 and 18 larger than 0.5, 
 # Studentised residuals: point 19 less than -3
 # Bonferroni p-value: point 19 smaller then 0.05, 
-# Hat-values: points 2 and 18 visibly different, perhaps influential but not higher than 1
+# Hat-values: points 2 and 18 different, perhaps influential but not higher than 1
 outlierTest(testLM2) # 19: rstudent = -3.900653, unadjusted p-value = 0.00076823, Bonferroni p = 0.019206
 
 boxCox(testLM2) # suggests log transformation
@@ -448,7 +455,7 @@ Trying log10 of the area since there's a cluster of small islands. Bigger island
 
 I'm hesitant to remove any outliers here, but I'm seeing how it goes removing New Guinea and Normanby Island again. Removing them doesn't mean I will not consider them again, however due to having so few data points I think they strongly influence the results and it may be easier to see the general picture without them. Additionally, Normanby Island is missing 57% and New Guinea 56% of the SNPs, making them less reliable.
 
-```{r adjusted model 2 building}
+```{r adjusted-model-2-building}
 z <- per.island[-c(18, 19),] # removing New Guinea and Normanby Island again
 
 LM2 <- lm(perc.o ~ log10(area_km2), data = z)
@@ -459,51 +466,26 @@ abline(coef = coef(LM2), col = 4, lwd = 2)
 summary(LM2)
 ```
 
-```{r adjusted model 2 diagnostics}
+```{r adjusted-model-2-diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once 
-plot(LM2) # diagnostic plots; relationship now linear and outliers are now less influential
+plot(LM2) # diagnostic plots; relationship now linear and outliers are now 
+# less influential
 
 par(mfrow = c(1, 1))
 qqPlot(LM2$residuals, line = "quartiles") # normal 
-shapiro.test(LM2$residuals) # W = 0.98906, p-value = 0.9945, indicates normality of residuals
+shapiro.test(LM2$residuals) # indicates normality of residuals
 hist(LM2$residuals, breaks = 10, xlim = c(-10,10))
 
-ncvTest(LM2) # homoscedasticity test: Chisquare = 0.8664813, Df = 1, p = 0.35193, H0 of constant variance is not rejected
+ncvTest(LM2) # homoscedasticity test: H0 of constant variance is not rejected
 
 influenceIndexPlot(LM2) # outliers
 # Cooks distances: none larger than 0.5, 
 # Studentised residuals: none less than -3 or more than 3
 # Bonferroni p-value: none smaller then 0.05, 
 # Hat-values: points 2 influential, higher than 1
-outlierTest(LM2) # 14: rstudent = -2.493984, unadjusted p-value = 0.021508, Bonferroni p = 0.49468
+outlierTest(LM2) 
 ```
  
-### iii. Results  
-
-> Call:
-lm(formula = perc.o ~ log10(area_km2), data = per.island)
-
-> Residuals:
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:|
-|-6.491|-1.622|-0.317|1.754|5.747|
-
-> Coefficients:
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|92.9729|0.8395|110.750|< 2e-16 ***|
-|log10(area_km2)|-0.9171|0.3012|-3.045|0.00616 **|
-
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-> Residual standard error: 2.982 on 21 degrees of freedom
-  (1 observation deleted due to missingness)
-Multiple R-squared:  0.3062  
-Adjusted R-squared:  0.2732  
-F-statistic: 9.27 on 1 and 21 DF,  p-value: 0.006159
-
 * Spread of residuals seems equal enough on both sides
 * t-values are above or below 2, indicating the coefficients are more reliable
 * Residual standard error much smaller than the intercept estimate, which is good
@@ -512,48 +494,61 @@ F-statistic: 9.27 on 1 and 21 DF,  p-value: 0.006159
 
 ### vi. Model Plot
 
-```{r labelled lm2 with area plot}
-ggplot(data = per.island, aes(x = log10(area_km2), y = perc.o, label = island)) + 
-  geom_point(colour = "red", size = 3) + 
+```{r labelled-lm2-with-area-plot}
+ggplot(data = per.island, aes(
+  x = log10(area_km2),
+  y = perc.o,
+  label = island
+)) +
+  geom_point(colour = "red", size = 3) +
   geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
-  geom_text(data = subset(per.island, 
-    (log10(area_km2) < 2 & perc.o < 90) | (log10(area_km2) > 2.9 & (perc.o > 92 | perc.o < 80))
-    ), 
-    hjust = 0.8, vjust = -0.8, size = 3) +
+  geom_text(
+    data = subset(per.island,
+                  (log10(area_km2) < 2 & perc.o < 90) |
+                    (log10(area_km2) > 2.9 & (perc.o > 92 | perc.o < 80))
+                  ),
+    hjust = 0.8,
+    vjust = -0.8,
+    size = 3
+  ) +
   ggtitle("Effect of Island Area on Homozygosity") +
   xlab("log Area of Island (log10 km^2)") + ylab("Homozygosity (%)") +
   theme_light()
 ```
  
 
-## 10c. Multiple Regression: both Distance and Area 
+## 9c. Multiple Regression: both Distance and Area 
 
 ### i. Model Construction and Diagnostics
 
 Taking a moment to look at if there's a relationship between area and distance from the mainland:
-```{r assessing lm area ~ distance}
+```{r assessing-lm-area-distance}
 par(mfrow = c(1, 1))
 adLM <- lm(log(area_km2) ~ km.from.ML, data = per.island)
 summary(adLM)
-plot(adLM)
 
 plot(log(area_km2) ~ km.from.ML, data = per.island)
 abline(coef = coef(adLM), col = 4, lwd = 2)
 
+par(mfrow = c(2, 2))
+plot(adLM)
 shapiro.test(adLM$residuals) # p-value = 0.8809, normality
-cor.test(per.island$km.from.ML, log(per.island$area_km2), method = "pearson") # p-value = 0.0002738, cor = -0.6666402, correlated
+cor.test(per.island$km.from.ML, log(per.island$area_km2), method = "pearson") 
+#correlated
 ```
 
 The above plot shows that generally the area of the islands decreases with distance (e.g. Borneo and New Guinea are large, Reiono and Tahanea are small) which I believe is a combination of sampling issues and how the islands are naturally on the Pacific. The correlation between these two variables is an issue with only a basic linear models because I cannot test the affect of each variable compared with each other because their effect is similar (collinearity in this case). I will go through diagnostics to check if the effect is great enough to warrant a different method e.g. GLM.
 
-```{r test model 3 building}
-z <- per.island[-c(18, 19),] # starting by removing New Guinea and Normanby Island again (after brief check of diagnostic plots)
+```{r test-model-3-building}
+z <- per.island[-c(18, 19),] # starting by removing New Guinea and Normanby Island 
+# again (after brief check of diagnostic plots)
 
-testLM3 <- lm(perc.o ~ km.from.ML + log(area_km2), data = z) # not sure if I should keep log transformation
+testLM3 <- lm(perc.o ~ km.from.ML + log(area_km2), data = z) # not sure if I 
+# should keep log transformation
 summary(testLM3)
 ```
 
-```{r test model 3 diagnostics}
+```{r test-model-3-diagnostics}
 par(mfrow = c(2, 2))
 plot(testLM3)
 
@@ -561,46 +556,21 @@ par(mfrow = c(1,1))
 hist(testLM3$residuals, breaks = 10, xlim = c(-10,10))
 
 qqPlot(testLM3$residuals, line = "quartiles") # normal
-shapiro.test(testLM3$residuals) # W = 0.96668, p-value = 0.6101, indicates normality of residuals
+shapiro.test(testLM3$residuals) # indicates normality of residuals
 
-ncvTest(testLM3) # homoscedasticity test: Chisquare = 0.8398007, Df = 1, p = 0.35945, H0 of constant variance is not rejected
+ncvTest(testLM3) # homoscedasticity test: H0 of constant variance is not rejected
 
 influenceIndexPlot(testLM3) # outliers
 # Cooks distances: no. 2 larger than 0.5, 
 # Studentised residuals: none less than -3 or more than 3
 # Bonferroni p-value: none smaller then 0.05, 
 # Hat-values: none influential, higher than 1
-outlierTest(testLM3) # 14: rstudent = 2.238249, unadjusted p-value = 0.037375, Bonferroni p = 0.85962
+outlierTest(testLM3)
 
-mctest::mctest(testLM3, type = "b") # tests for collinearity, most tests did not detect e.g. condition number = 7.6872 (10-30 indicates presence, issue if >30) and VIF = 1.727 (issue if >5)
+mctest::mctest(testLM3, type = "b") # tests for collinearity, most tests did not detect
+# e.g. condition number = 7.6872 (10-30 indicates presence, issue if >30) and
+# VIF = 1.727 (issue if >5)
 ```
-
-### iii. Results 
-
-> Call:
-lm(formula = perc.o ~ km.from.ML + log10(area_km2), data = per.island)
-
-> Residuals:  
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:|
-|-4.8047|-2.0464|-0.1323|2.0577|4.7434|
-
-> Coefficients:  
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|89.1097394|2.2543620|39.528|<2e-16 ***|
-|km.from.ML|0.0003642|0.0001989|1.832|0.0819 .|    
-|log10(area_km2)|-0.1985810|0.1651672|-1.202|0.2433|
-   
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-> Residual standard error: 2.828 on 20 degrees of freedom
-  (1 observation deleted due to missingness)  
-Multiple R-squared:  0.4059  
-Adjusted R-squared:  0.3465  
-F-statistic: 6.832 on 2 and 20 DF,  p-value: 0.005478
 
 * Residuals appear well distributed (approximately 5 on either side of 0, which the median is close to)
 * The t-values are low (between -2 and 2) which is not ideal, estimates may be unreliable
@@ -614,32 +584,52 @@ Even though the colinearity test indicated colinearity isn't high between the ex
 
 ### vi. Alternative models (GLM)
 
-```{r glm model testing}
+```{r glm-model-testing}
 # distance ~ area 
 c <- glm(perc.o ~ km.from.ML + area_km2, data = z, family = gaussian(link = "identity")) 
 summary(c) # km.from.ML significant, AIC 118.34
 
 # distance ~ log area
 c2 <- glm(perc.o ~ km.from.ML + log(area_km2), data = z, family = gaussian(link = "identity")) 
-summary(c2) # intercept still significant, not km or area. AIC 117.88 (lower preferred when comparing models). Results the same as the linear model above.
+summary(c2) # intercept still significant, not km or area. AIC 117.88 
+# (lower preferred when comparing models). Results the same as the linear model above.
 ```
 
-```{r how much variance model explains}
-with(summary(c2), 1 - deviance/null.deviance) # R^2 value of 0.4058967. This is not high therefore there may be additional variables to add to the model to explain the variance.
+```{r variance-model-explains}
+with(summary(c2), 1 - deviance/null.deviance) # R^2 value of 0.4058967. This is not 
+# high therefore there may be additional variables to add to the model to explain 
+# the variance.
 ```
 
 ### v. Model Plot
 
-```{r combo plot}
-ggplot(data = per.island, aes(x = km.from.ML, y = perc.o, label = island)) + 
-  geom_point(mapping = aes(colour = log10(area_km2)), size = 3) + 
+```{r combo-plot}
+ggplot(data = per.island, aes(
+  x = km.from.ML,
+  y = log10(area_km2) + 1,
+  label = island
+)) +
+  geom_point(mapping = aes(colour = perc.o), size = 3) +
   geom_smooth(method = 'lm', se = TRUE, level = 0.95) +
-  scale_color_gradient(low = "red", high = "blue", name = "Area (log10 km²)") +
-  geom_text(data = subset(per.island, 
-    (perc.o < 80) | (km.from.ML < 5000 & perc.o > 90)), 
-    hjust = -0.1, vjust = -0.8, size = 3) +
+  scale_color_gradient2(
+    low = "navy",
+    mid = "darkorchid1",
+    high = "red",
+    midpoint = 85,
+    name = "Homozygosity (%)"
+  ) +
+  geom_text(
+    data = subset(
+      per.island,
+      (log10(area_km2) < 2 & km.from.ML < 7500) |
+        (log10(area_km2) > 4 & km.from.ML > 5000)
+    ),
+    hjust = 0.3,
+    vjust = -0.8,
+    size = 3
+  ) +
   ggtitle("Island Homozygosity change with Distance and Area increase") +
-  xlab("Distance from Mainland (km)") + ylab("Homozygosity (%)") +
+  xlab("Distance from Mainland (km)") + ylab("Area (log10 km²) + 1") +
   theme_light()
 ```
 

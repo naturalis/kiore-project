@@ -1,48 +1,52 @@
 ---
 title: "Mantel Test Script"
 author: "Grace Saville"
-date: "01/02/2022"
+date: "16/05/2022"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = "C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 1. Preamble
-
-```{r libraries}
+```{r libraries, include = FALSE}
 library(ade4)
 library(geosphere)
 library(ggplot2)
 library(car)
 library(plyr)
-getwd()
-setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+# getwd()
+# setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 2. Loading the data
+# 1. Loading the data
 
-```{r loading data}
+```{r loading-data}
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
-gen.matrix <- as.matrix(read.delim("./data/SplitsTree/geneticdist_SplitsTree_output.txt", sep = "\t", header = FALSE))
-# Make sure the text file is the distances only, remove any extras e.g. column vector at bottom of file
+gen.matrix <- as.matrix(
+  read.delim("./data/SplitsTree/geneticdist_SplitsTree_output.txt", 
+             sep = "\t", header = FALSE))
+# Make sure the text file is the distances only, remove any extras e.g. 
+# column vector at bottom of file
 
 dim(data)
 ```
 
-# 3. Creating geographical distance matrix
+# 2. Creating geographical distance matrix
 
 **ONLY NEED TO RUN THE FOLLOWING CODE CHUNK ONCE AND THEN SAVE**
 
 Using the mapview funtion in the last code chunk of this script I noticed that Tahanea is plotted in Australia, and found out the longitude number is missing a negative sign, and that Reiono and Honuea have the same coordinates even though they're different islands. Fixing that here:
-```{r longitude adjustment}
+```{r longitude-adjustment, eval = FALSE}
 x <- grep("Tahanea", data$island.1, value = FALSE) # finding rows of Tahanea
 names(data) # finding column number for "geo_long"
 data[x, 12]
 data[x, 12] <- -144.97 # replacing the number
 
-# the coordinates given for Reiono and Honuea point to an island in French Polynesia called Moorea-Maiao
+# the coordinates given for Reiono and Honuea point to an island in 
+# French Polynesia called Moorea-Maiao
 # Reino should be approx. -17.046, -149.546
 # Honuea should be approx -17.009, -149.585
 # Checking other islands close by: 
@@ -65,12 +69,12 @@ data[x, 12] <- -149.558 # replacing geo_long
 
 rm(x)
 
-write.csv(data, "./data/RStudio/ratsSNPs_clean.csv", row.names = FALSE)
+# write.csv(data, "./data/RStudio/ratsSNPs_clean.csv", row.names = FALSE)
 ```
 
 (only need to do the above code once since it saves the edited df to file)
 
-# 4. Setting up longitudes and latitudes
+# 3. Setting up longitudes and latitudes
 
 Different distance functions:
 
@@ -78,12 +82,13 @@ Different distance functions:
 * distm() makes distance matrix
 * distGeo() assumes earth is elliptical (ish), can choose specific model
 
-```{r longitude and latitude matrix}
-names(data) # need "geo_lat" "geo_long" 
+```{r longitude-latitude-matrix}
+head(names(data), n = 20) # need "geo_lat" "geo_long" 
 longlat <- data[,c(1,11,12)]
 head(longlat) # checking correct columns are used
 
-longlat <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+longlat <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix 
+# with 2 columns, col 1 longitude and col 2 latitude
 
 geo.matrix <- distm(longlat, fun = distGeo) # converting to pairwise distance matrix
 dim(geo.matrix) # 370 370
@@ -93,86 +98,44 @@ geo.dist <- as.dist(geo.matrix, diag = TRUE, upper = TRUE) # converting to dist 
 # upper = TRUE #includes upper triangle
 ```
 
-# 5. Creating genetic distance matrix
+# 4. Creating genetic distance matrix
 
-```{r genetic distance matrix}
+```{r genetic-distance-matrix}
 dim(gen.matrix) # 370 370
 gen.dist <- as.dist(gen.matrix, diag = TRUE, upper = TRUE) # converting to dist object
 ```
 
-# 6. Mantel test
+# 5. Mantel test
 
-```{r mantel test}
+```{r mantel-test, warning = FALSE}
+set.seed(4)
 r1 <- mantel.rtest(gen.dist, geo.dist, nrepet = 999)
 r1
-plot(r1$plot$hist, main = "Mantel test", xlim = c(-0.1, 0.1)) # plotting simulated p-values
-sum(r1$plot$hist$counts)
+plot(r1$plot$hist, main = "Mantel test", xlim = c(-0.1, 0.1)) # plotting
+# abline(v = r1$obs, col = 4, lwd = 2)
+
 ```
-
-**Results:**
-
-> Monte-Carlo test  
-Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
-
-> Observation: 0.4987612   
-
-> Based on 999 replicates  
-Simulated p-value: 0.001   
-Alternative hypothesis: greater   
-
-> Std.Obs: 2.370409e+01  
-Expectation: 5.514360e-04  
-Variance: 4.417514e-04 
 
 * -1 suggests strong negative correlation, e.g. closer islands mean further genetically or further islands means closer genetically
 * 0 suggests no correlation, e.g. genetic difference is not correlated to island distance
 * 1 suggests strong positive correlation e.g. closer islands mean closer genetically 
 
 Therefore the observed correlation of 0.4987612 suggests that there is a positive correlation between genetic distance and geographic distance (and the null hypothesis of no correlation is rejected).
-      
 
-**Results before I fixed the missing negative sign in Tahanea and other location issues:**
+# 6. Creating pairwise distances dataframe
 
-> Monte-Carlo test  
-Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
-
-> Observation: 0.4345602   
-
-> Based on 999 replicates  
-Simulated p-value: 0.001   
-Alternative hypothesis: greater   
-
-> Std.Obs: 2.329675e+01   
-Expectation: 7.916798e-04     
-Variance: 3.466772e-04  
-
-
-**Results from uncleaned dataset:** 
-
-> Monte-Carlo test  
-Call: mantelnoneuclid(m1 = m1, m2 = m2, nrepet = nrepet)  
-
-> Observation: 0.2807331
-
-> Based on 99 replicates  
-Simulated p-value: 0.01  
-Alternative hypothesis: greater   
-
-> Std.Obs: 26.5367570885  
-Expectation: -0.0002961658  
-Variance: 0.0001121521  
-
-# 7. Creating pairwise distances dataframe
-
-```{r making pairwise distance summary df}
-specimens <- read.delim("./data/SplitsTree/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
+```{r making-pwd-df}
+specimens <- read.delim(
+  "./data/SplitsTree/geneticdist_SplitsTree_output_taxa_only.txt", header = FALSE)
 specimens <- as.vector(specimens[,2])
 
 colnames(gen.matrix) <- specimens 
-rownames(gen.matrix) <- specimens # naming the rows and columns by the order given in the SplitsTree output
+rownames(gen.matrix) <- specimens # naming the rows and columns by the order 
+# given in the SplitsTree output
 
 colnames(geo.matrix) <- data[,1]
-rownames(geo.matrix) <- data[,1] # naming the rows and columns here by the order of lat/long, which came from the data df
+rownames(geo.matrix) <- data[,1] # naming the rows and columns here by the 
+# order of lat/long, which came from the data df
 
 gen.matrix[lower.tri(gen.matrix)] <- NA # keeping only the upper triangle of each matrix
 geo.matrix[lower.tri(geo.matrix)] <- NA
@@ -181,7 +144,8 @@ dist.summary <- data.frame(
   col = colnames(gen.matrix)[col(gen.matrix)],
   row = rownames(gen.matrix)[row(gen.matrix)],
   gen.dist = c(gen.matrix)
-) # converting the genetic matrix into a df with columns describing which combos result in the distance
+) # converting the genetic matrix into a df with columns describing which 
+# combos result in the distance
 
 x <- data.frame(
   col = colnames(geo.matrix)[col(geo.matrix)],
@@ -195,8 +159,10 @@ rm(x)
 
 The above df "dist.summary" is not ideal since it's not space efficient (~12MB), however it provides and easy way to link the row and column specimens that generated the distances, therefore making points on the graph label-able.
 
-```{r tidying up pwd df}
-dist.summary <- tidyr::unite(dist.summary, specimens.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+```{r tidying-pwd-df}
+dist.summary <- tidyr::unite(dist.summary, specimens.combo, 1:2, sep = ":", remove = TRUE)
+# combining the first 2 columns (the names of the matrices columns and rows) 
+# to give a label to each pairwise distance
 
 dist.summary <- na.omit(dist.summary) # removing NA's that were in the bottom triangle
 
@@ -204,8 +170,9 @@ dist.summary <- na.omit(dist.summary) # removing NA's that were in the bottom tr
 islands.combo <- dist.summary$specimens.combo 
 islands.combo <- gsub("[0-9]+", "", islands.combo) # removing specimen ID numbers
 islands.combo <- gsub("_", "", islands.combo) # removing underscores
-unique(islands.combo)
-islands.combo <- gsub("Thailand", "Mainland", islands.combo) # replacing 3 countries with mainland
+# unique(islands.combo)
+islands.combo <- gsub("Thailand", "Mainland", islands.combo) # replacing 3 
+# countries with mainland
 islands.combo <- gsub("Laos", "Mainland", islands.combo)
 islands.combo <- gsub("Cambodia", "Mainland", islands.combo)
 islands.combo <- gsub("Halmahera", "Halmaher", islands.combo) # replacing some double ups
@@ -244,7 +211,8 @@ intra <- as.character(c(
   "Tahanea:Tahanea",
   "WakeIs:WakeIs"
 ))
-dist.summary[which(dist.summary$islands.combo %in% intra),4] <- NA # removing same-same island combos
+dist.summary[which(dist.summary$islands.combo %in% intra),4] <- NA # removing 
+# same-same island combos
 dist.summary[dist.summary == 0] <- NA # turning zeros to NAs
 dist.summary <- na.omit(dist.summary) # removing rows with NAs
 rm(intra, specimens)
@@ -254,20 +222,20 @@ dist.summary$geo.dist <- dist.summary$geo.dist/1000 # going from metres to km
 
 Rows which have either or both gen and geo dist at zero (although there should never be a gen.dist at zero) will sit on the axis and potentially pull on the regression line. Geo distances at 0 will always be specimens on the same island, which I think it best to remove since they don't contribute to whether there is a correlation between islands distance (since they're actually the same island).
 
-```{r saving pwd df}
-getwd()
+```{r saving-pwd-df, eval = FALSE}
+# getwd()
 write.csv(dist.summary, "./data/RStudio/gen_geo_distance_matrices_df.csv", row.names = FALSE)
 ```
 
-# 8. Linear Modelling
+# 7. Linear Modelling
 
-```{r reloading data if necessary}
+```{r reloading-data, eval = FALSE}
 dist.summary <- read.csv("./data/RStudio/gen_geo_distance_matrices_df.csv")
 ```
 
-## 8a. Test Model
+## 7a. Test Model
 
-```{r test model 1 building}
+```{r test-model-1-building}
 testLM <- lm(gen.dist ~ geo.dist, data = dist.summary) # model
 summary(testLM) # model results
 
@@ -275,40 +243,42 @@ plot(gen.dist ~ geo.dist, data = dist.summary)
 abline(coef = coef(testLM), col = 4, lwd = 2)
 ```
 
-```{r test model 1 diagnostics}
+```{r test-model-1-diagnostics}
 par(mfrow = c(2, 2)) # changes the number of plots visible at once
-plot(testLM) # # diagnostic plots, not normal, distribution may be skewed towards the left side ("Right skew" or "positive skew")
+plot(testLM) # # diagnostic plots, not normal, distribution may be skewed 
+# towards the left side ("Right skew" or "positive skew")
 
 par(mfrow = c(1, 1))
 
 qqPlot(testLM$residuals, line = "quartiles") # non-normal dist
-shapiro.test(testLM$residuals) # doesn't work, sample size must be between 3 and 5000
-ks.test(testLM$residuals, 'pnorm') # D = 0.43238, p-value < 2.2e-16, non-normal
+ks.test(testLM$residuals, 'pnorm') # non-normal
 hist(testLM$residuals, breaks = 50) # clear positive skew
 
-ncvTest(testLM) # homoscedasticity test: Chisquare = 950.7684, Df = 1, p = < 2.22e-16, H0 of constant variance is rejected
+ncvTest(testLM) # homoscedasticity test: H0 of constant variance is rejected
 
-influenceIndexPlot(testLM) # outliers, hard to judge since there seem to be many, or none which are an issue
-outlierTest(testLM) # lists 10 different points which could be an issue (all over 3 rstudent and signif.)
+influenceIndexPlot(testLM) # outliers, hard to judge since there seem to be many, 
+# or none which are an issue
+outlierTest(testLM) # lists 10 different points which could be an issue 
+# (all over 3 rstudent and signif.)
 
 boxCox(testLM) # recommended log transformation
 ```
 
 I decided to do a brief check of observed correlation to compare with the Mantel test results, using the above dataframe;
-```{r additonal correlation test}
-cor.test(dist.summary$gen.dist, dist.summary$geo.dist, method = "pearson") # should be taken with a grain of salt since the residual variance is not constant:
-# t = 134.54, df = 65067, p-value < 2.2e-16
-# 95 percent confidence interval: 0.4604831 0.4725059
-# sample estimates: cor 0.466516 
+```{r additonal-correlation-test}
+cor.test(dist.summary$gen.dist, dist.summary$geo.dist, method = "pearson") # 
+# should be taken with a grain of salt since the residual variance is not constant
 ```
 
-## 8b. Adjusted Model
+## 7b. Adjusted Model
 
 I attempted to transform the data (e.g. sqrt, log10) to achieve normal residual distribution however it was not successful so I will build a GLM instead.
 
-```{r adjusted model 1 building}
-GLM <- glm(gen.dist ~ geo.dist, data = dist.summary, family = Gamma(link = "identity")) # Gamma distrubution family used for right-skewed data. 
-# I tried the link functions "log" and "inverse" first but the resulting coefficients were very peculiar (e.g. intercepts at -2 or 7)
+```{r adjusted-model-1-building}
+GLM <- glm(gen.dist ~ geo.dist, data = dist.summary, family = Gamma(link = "identity")) 
+# Gamma distrubution family used for right-skewed data. 
+# I tried the link functions "log" and "inverse" first but the resulting coefficients 
+# were very peculiar (e.g. intercepts at -2 or 7)
 summary(GLM) # model results
 
 par(mfrow = c(1, 1))
@@ -316,89 +286,75 @@ plot(gen.dist ~ geo.dist, data = dist.summary)
 abline(coef = coef(GLM), col = 4, lwd = 2)
 ```
 
-```{r adjusted model 1 diagnostics}
+```{r adjusted-model-1-diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once 
 plot(GLM) # diagnostic plots
 
 residualPlots(GLM)
 
+par(mfrow = c(1, 1))
 qqPlot(GLM$residuals, line = "quartiles") # 
 ks.test(GLM$residuals, 'pnorm') # 
 hist(GLM$residuals, breaks = 50)
 ```
 
-## 8c. GLM Results
-
-> Call:
-glm(formula = gen.dist ~ geo.dist, family = Gamma(link = "identity"), data = z)
-
-> Deviance Residuals: 
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:|
-|-1.7423|-0.5323|-0.2198|0.1474|3.0278|  
-
-> Coefficients:
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|
-|(Intercept)|9.434e-02|6.950e-04|135.7|<2e-16 ***|
-|geo.dist|2.013e-05|1.621e-07|124.2|<2e-16 ***|
-
-> Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-> (Dispersion parameter for Gamma family taken to be 0.4959804)
-
-> Null deviance: 30821  on 65068  degrees of freedom  
-Residual deviance: 22856  on 65067  degrees of freedom  
-AIC: -117995  
-
-> Number of Fisher Scoring iterations: 5
-
-```{r how much variance model explains}
-with(summary(GLM), 1 - deviance/null.deviance) # R^2 value of 0.2584382. This is not high therefore there may be additional variables to add to the model to explain the variance.
+```{r variance-model-explains}
+with(summary(GLM), 1 - deviance/null.deviance) # R^2 value of 0.2584382. 
+# This is not high therefore there may be additional variables to add to 
+# the model to explain the variance.
 ```
 
-# 9. Looking at the genetically closest island pairs
-```{r top 10 genetically closest islands}
-dist.summary <- dist.summary[order(dist.summary$geo.dist, decreasing = FALSE),] # sorting by geo dist
-dist.summary <- dist.summary[order(dist.summary$gen.dist, decreasing = FALSE),] # sorting by gen dist
+# 8. Looking at the genetically closest island pairs (based on specimens)
+```{r genetically-closest, eval = FALSE}
+# top 10 genetically closest islands
+# sorting by geo dist, increasing in size
+dist.summary <- dist.summary[order(dist.summary$geo.dist, decreasing = FALSE),] 
 
-head(dist.summary[!duplicated(dist.summary$islands.combo),], n = 15) 
+# sorting by gen dist, 
+dist.summary <- dist.summary[order(dist.summary$gen.dist, decreasing = FALSE),] 
 
 
+x <- dist.summary[!duplicated(dist.summary$islands.combo),]
+
+x <- x[order(x$gen.dist, decreasing = FALSE),]
+kable(head(x, n = 20))
 ```
 
+# 9. Taking a closer look at islands with high distance/close genetics
 
-# 10. Taking a closer look at islands with high distance/close genetics
+```{r values-under-line}
+# reloading the df so that the order is reset to original:
+dist.summary <- read.csv("./data/RStudio/gen_geo_distance_matrices_df.csv")
+# making sure correct fitted values are ready:
+GLM <- glm(gen.dist ~ geo.dist, data = dist.summary, family = Gamma(link = "identity"))
 
-```{r examining values under the regression line}
 fv <- as.vector(GLM$fitted.values)
-dist.summary <- cbind(dist.summary, fv)
+x <- cbind(dist.summary, fv)
 
-under.fv <- data.frame()
-for (i in 1:nrow(dist.summary)) { # for every row of the island data (island to island)
-  if (dist.summary[i,2] < dist.summary[i,5]) { # if the genetic distance is less than the fitted value
-    under.fv <- rbind(under.fv, dist.summary[i,]) # row bind
-  }
-}
-rm(i)
+x <- x[x$gen.dist < x$fv,] # keeping only gen.dist values less than fitted values
 
-plot(gen.dist ~ geo.dist, data = under.fv) # checking, should be all values up to the regression line
+plot(gen.dist ~ geo.dist, data = x)
+# should be all values up to the regression line
+```
 
-all.combos <- count(dist.summary, islands.combo) # if doesn't work try $ instead of comma
-under.fv.combos <- count(under.fv, islands.combo)
-combo.totals <- merge(all.combos, under.fv.combos, by = "islands.combo", all = TRUE)
+```{r}
+all.combos <- count(dist.summary$islands.combo) # if doesn't work try $ instead of comma
+under.fv.combos <- count(x$islands.combo)
+combo.totals <- merge(all.combos, under.fv.combos, by = "x", all = TRUE)
 colnames(combo.totals) <- c("combo", "all", "below.line")
-rm(all.combos, under.fv.combos)
+rm(all.combos, under.fv.combos, x)
 combo.totals$perc.under <- round(((combo.totals$below.line / combo.totals$all) * 100), 3)
 combo.totals[is.na(combo.totals)] <- 0
 
-# perc.under is the percentage of the specimens with genetic distances (between the two stated islands) which are less than the average genetic distance/point on the regression line at that geographic distance.
+# perc.under is the percentage of the specimens with genetic distances (between 
+# the two stated islands) which are less than the average genetic distance/point 
+# on the regression line at that geographic distance.
 
-x <- combo.totals$combo[combo.totals$perc.under == 100]
-x <- as.data.frame(x)
-x <- tidyr::separate(x, sep = ":", col = x, into = c("isl1", "isl2"))
+kable(combo.totals[combo.totals$perc.under > 99,])
+
+# x <- combo.totals$combo[combo.totals$perc.under == 100]
+# x <- as.data.frame(x)
+# x <- tidyr::separate(x, sep = ":", col = x, into = c("isl1", "isl2"))
 ```
 
 # 11. Plots
@@ -408,23 +364,18 @@ ggplot(data = dist.summary, aes(x = geo.dist, y = gen.dist)) +
   geom_point(shape = 1, colour = "grey") + 
   geom_smooth(method = "lm") + 
   ggtitle("Correlation between Geographic and Genetic Distance between Islands") +
-  xlab("Geographic Distance between two islands (km)") + ylab("Genetic Distance between two islands") +
-  theme_light()
-
-# log transformed:
-ggplot(data = dist.summary, aes(x = (geo.dist)^2, y = gen.dist)) + 
-  geom_point(shape = 1, colour = "grey") + 
-  geom_smooth(method = "lm") + 
-  ggtitle("Geographic versus Genetic Distance between Islands") +
-  xlab("Geographic Distance between 2 islands (km)") + ylab("Genetic Distance between 2 islands") +
+  xlab("Geographic Distance between two islands (km)") + 
+  ylab("Genetic Distance between two islands") +
   theme_light()
 ```
 
 # 11. Plotting the coordinates on a map
 
-```{r mapping}
-library(maps) 
+```{r include = FALSE}
+library(maps)
+```
 
+```{r mapping}
 head(names(data), n = 20) # need "geo_lat" "geo_long" 
 longlat <- data[,c(8,11,12)]
 longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island
@@ -437,7 +388,8 @@ longlat[14,1] <- "Rakiura"
 longlat[18,1] <- "Rimatuu"
 longlat[19,1] <- "Aotea"
 
-longlat[longlat$geo_long < 0,] # only longitude values up to 180 are plotting, rest is blank. Can try fixing this by adding 360 to all the negative longitude points
+longlat[longlat$geo_long < 0,] # only longitude values up to 180 are plotting, rest 
+# is blank. Can try fixing this by adding 360 to all the negative longitude points
 longlat[8,3] <- longlat[8,3] + 360
 longlat[9,3] <- longlat[9,3] + 360
 longlat[11,3] <- longlat[11,3] + 360
@@ -460,9 +412,15 @@ map("world2", # "world" over Africa, "world2" over Pacific
 map.axes() # adds axes
 points(longlat$geo_long, longlat$geo_lat, 
        col = "red", cex = 1, pch = 20)
+```
 
-# trying with ggplot
+```{r include = FALSE}
 library(ggrepel)
+```
+
+
+```{r ggplot-map}
+# trying with ggplot
 ggplot(longlat, aes(x = geo_long, y = geo_lat, label = island.1)) +   
   borders("world2", colour = NA, fill = "wheat1")  +
   geom_point(color = "red", size = 2) +
@@ -474,8 +432,11 @@ ggplot(longlat, aes(x = geo_long, y = geo_lat, label = island.1)) +
         axis.ticks = element_blank()) +
   geom_text_repel(size = 3, point.size = 1, min.segment.length = 0.25) +
   ggtitle("Map of Islands Sampled for Polynesian Rats")
-
 ```
+
+
+
+
 
 
 

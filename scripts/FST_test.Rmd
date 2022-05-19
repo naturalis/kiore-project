@@ -1,38 +1,39 @@
 ---
 title: "FST Prep and Analysis Script"
 author: "Grace Saville"
-date: "26/04/2022"
+date: "16/05/2022"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(knitr)
+opts_chunk$set(echo = TRUE)
+opts_knit$set(root.dir = "C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 1. Preamble 
-
-```{r libraries}
+```{r libraries, include = FALSE}
 library(corrplot)
 library(ggplot2)
 library(tidyr)
 library(car)
 library(geosphere)
-getwd()
-setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
+library(ade4)
+# getwd()
+# setwd("C:/Users/airhe/OneDrive/Documents/Masters/Project 3/kiore-project")
 ```
 
-# 2. Prepping the dataframe
+# 1. Prepping the dataframe
 
-```{r loading data}
+```{r loading-data}
 # load(".RData") # if necessary
 data <- read.csv("./data/RStudio/ratsSNPs_clean.csv")
 ```
 
-```{r SNP column separation}
+```{r SNP-column-separation, warning = FALSE}
 copy <- data # making a copy
-copy[1,1:20] # checking column names
+t(copy[1,1:20]) # checking column names
 copy <- copy[,-c(2:16)] # removing all but specimen names and SNPs
-copy[1,1:20] # checking
+t(copy[1,1:20]) # checking
 
 copy[copy == "?"] <- "?:?" # replacing single ? with double ? so alleles can be split
 
@@ -40,7 +41,9 @@ x <- data.frame(island = copy$island) # setting up new df for for loop
 coln <- as.vector(colnames(copy)) # prepping to paste the column names into the for loop
 dim(copy) # 379 rows 283 columns
 for (i in 2:283) {
-  y <- colsplit(copy[,i], split = ":", names = c(coln[i], paste("blank", i, sep = "."))) # splitting each i column and renaming them 
+  y <- reshape::colsplit(
+          copy[, i], split = ":", names = c(coln[i], paste("blank", i, sep = "."))) 
+          # splitting each i column and renaming them
   x <- cbind(x, y) # combining output with current df
   rm(i, y) # removing temp objects
 }
@@ -54,11 +57,12 @@ copy <- x
 rm(x, coln) # removing excess objects
 ```
 
-# 3. Producing the file necessary for PGDSpider program
+# 2. Producing the file necessary for PGDSpider program
 
-```{r file prep}
-copy <- copy[order(copy$island, decreasing = FALSE), ] # ordering df alphabetically by island
-print(as.matrix(copy[, 1])) # printing the island names and row numbers
+```{r file-prep}
+copy <- copy[order(copy$island, decreasing = FALSE), ] # ordering df alphabetically 
+# by island
+# print(as.matrix(copy[, 1])) # printing the island names and row numbers
 
 # A=1, T=2, G=3, C=4
 copy[copy == "A"] <- "1"
@@ -80,7 +84,8 @@ popnames <- as.character(
     "pop = Kamaka", # 104:123
     "pop = Kayangel", # 124:138
     "pop = Late_Island", # 141:161
-    "pop = Mainland", # 29, 139, 140, 162, 349, 350 ((including Luzon here because Luzon is part of the mainland cluster in the NeighborNet network)
+    "pop = Mainland", # 29, 139, 140, 162, 349, 350 (including Luzon here because
+    # Luzon is part of the mainland cluster in the NeighborNet network)
     "pop = Malenge", # 163:174
     "pop = Mohotani", # 175:188
     "pop = Motukawanui", # 189:209
@@ -127,14 +132,15 @@ y <- as.data.frame(copy[351:370,]) # Wake_Island
 pops <- as.character(c(letters[seq(from = 1, to = 25)])) # list of popn object names
 ```
 
-```{r writing to file}
+```{r writing-file, eval = FALSE}
 ncol(copy) #565
 getwd()
 
 sink("./data/PGDSpider/ratsSNPs_PGDSpider_input_CLEAN.txt") # create empty file
 cat("rats_SNPS", "npops = 25", "nloci = 282", fill = 1)
 cat("\t", fill = FALSE)
-cat(colnames(copy[,c(FALSE,TRUE)]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names (even columns only)
+cat(colnames(copy[,c(FALSE,TRUE)]), "\n", sep = "\t\t", fill = FALSE) # column/SNP names
+# (even columns only)
 for (i1 in 1:25) {
   cat(popnames[i1], fill = 1) # island name
   foo <- get(pops[i1]) # calling the island object based on the pops vector
@@ -150,9 +156,9 @@ rm(list = c(letters[seq(from = 1, to = 25)])) # removing excess objects
 
 At this stage PGDSpider program and Arlequin were used to convert the file produced and run tests on the data. The resulting output is used here for analysis.
 
-# 4. Loading the results files for analysis
+# 3. Loading the results files for analysis
 
-```{r loading results files}
+```{r loading-results-files}
 popnames <- as.character(
   c(
     "Aotea",
@@ -183,50 +189,37 @@ popnames <- as.character(
   )
 )
 
-pwd <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_only.csv", header = TRUE)
-pv <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_pvalues_only.csv", header = TRUE)
+pwd <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_only.csv", 
+                header = TRUE)
+pv <- read.csv("./results/Arlequin_FST/fst_pairwisedistances_pvalues_only.csv", 
+               header = TRUE)
 colnames(pwd) <- popnames
 rownames(pwd) <- popnames
 pwd <- as.matrix(pwd)
 colnames(pv) <- popnames
 rownames(pv) <- popnames
 pv <- as.matrix(pv)
+```
 
+```{r making-full-matrix}
 x <- t(pwd) # transposed copy
-pwd[upper.tri(pwd, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)] # making full matrix (not just lower tri)
+pwd[upper.tri(pwd, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)] # making full 
+# matrix (not just lower tri)
 x <- t(pv) # transposed copy for p-values
 pv[upper.tri(pv, diag = FALSE)] <- x[upper.tri(x, diag = FALSE)]
 
 rm(x)
 ```
 
-# 5. Creating results dataframe on which to base analyses
+# 4. Making Geopgraphic distance matrix
 
-## 5a. Converting FST matrix to dataframe
-
-```{r fst matrix to df}
-pwd.df <- pwd
-pwd.df[lower.tri(pwd.df, diag = TRUE)] <- NA # keeping only the upper triangle of each matrix
-
-pwd.df <- data.frame(
-  col = colnames(pwd.df)[col(pwd.df)],
-  row = rownames(pwd.df)[row(pwd.df)],
-  fst.dist = c(pwd.df)
-) # converting the fst matrix into a df with columns describing which combos result in the distance
-
-pwd.df <- na.omit(pwd.df)
-
-pwd.df <- unite(pwd.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
-```
-
-## 5b. Making Geopgraphic distance matrix
-
-```{r making geo distance matrix}
+```{r making-geo-distance-matrix}
 longlat <- data[,c(8,11,12)]
-longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate for each island
+longlat <- longlat[!duplicated(longlat$island.1),] # keeping only 1 coordinate 
+# for each island
 longlat <- longlat[order(longlat$island.1, decreasing = FALSE),] # sorting alphabetically
 row.names(longlat) <- seq(nrow(longlat)) # renaming row numbers to be sequential
-longlat # checking
+kable(longlat) # checking
 
 # editing the names to match those in the pwd df so I can merge them later
 longlat[1,1] <- "Aotea"
@@ -241,55 +234,102 @@ longlat[20,1] <- "Rakiura"
 longlat[22,1] <- "Rimatuu"
 longlat[23,1] <- "Slipper_Island"
 longlat[26,1] <- "Wake_Island"
+longlat <- longlat[-12,] # removing luzon since fst has it with mainland
+row.names(longlat) <- seq(nrow(longlat)) # renaming row numbers to be sequential
 
-
-geo.matrix <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix with 2 columns, col 1 longitude and col 2 latitude
+geo.matrix <- as.matrix(longlat[,c(3,2)]) # distGeo function needs a matrix with 
+# 2 columns, col 1 longitude and col 2 latitude
 
 geo.matrix <- distm(geo.matrix, fun = distGeo) # converting to pairwise distance matrix
-dim(geo.matrix) # 26 26
+dim(geo.matrix) # 25 25
 ```
 
-## 5c. Combining the FST and Geographic dataframes
+# 5. FST Mantel test
 
-```{r adding geo distances to fst df}
+```{r mantel-test-fst-geo}
+dim(geo.matrix) # 25 25
+dim(pwd) # 25 25 
+
+geo.dist <- as.dist(geo.matrix, diag = TRUE, upper = TRUE) # converting to dist object
+fst.dist <- as.dist(pwd, diag = TRUE, upper = TRUE) 
+
+set.seed(4)
+r1 <- mantel.rtest(fst.dist, geo.dist, nrepet = 999)
+r1
+plot(r1$plot$hist, main = "Mantel test", xlim = c(-0.5, 0.5))
+# abline(v = )
+```
+
+
+# 6. Creating results dataframe on which to base analyses
+
+## 6a. Converting FST matrix to dataframe
+
+```{r fst-matrix-to-df}
+pwd.df <- pwd
+pwd.df[lower.tri(pwd.df, diag = TRUE)] <- NA # keeping only the upper triangle 
+# of each matrix
+
+pwd.df <- data.frame(
+  col = colnames(pwd.df)[col(pwd.df)],
+  row = rownames(pwd.df)[row(pwd.df)],
+  fst.dist = c(pwd.df)
+) # converting the fst matrix into a df with columns describing which combos 
+# result in the distance
+
+pwd.df <- na.omit(pwd.df)
+
+pwd.df <- unite(pwd.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining 
+# the first 2 columns (the names of the matrices columns and rows) to give a label 
+# to each pairwise distance
+```
+
+## 6b. Combining the FST and Geographic dataframes
+
+```{r adding-geo-distances}
 colnames(geo.matrix) <- longlat[,1]
 rownames(geo.matrix) <- longlat[,1] # naming the rows and columns
 
-geo.matrix[lower.tri(geo.matrix, diag = TRUE)] <- NA # keeping only the upper triangle of matrix
+geo.matrix[lower.tri(geo.matrix, diag = TRUE)] <- NA # keeping only the upper 
+# triangle of matrix
 
 geo.df <- data.frame(
   col = colnames(geo.matrix)[col(geo.matrix)],
   row = rownames(geo.matrix)[row(geo.matrix)],
   geo.dist = c(geo.matrix)
-) # converting the genetic matrix into a df with columns describing which combos result in the distance
+) # converting the genetic matrix into a df with columns describing which combos 
+# result in the distance
 
 geo.df <- na.omit(geo.df) # removing NA's left from lower triangle
 
-geo.df <- unite(geo.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining the first 2 columns (the names of the matrices columns and rows) to give a label to each pairwise distance
+geo.df <- unite(geo.df, islands.combo, 1:2, sep = ":", remove = TRUE) # combining 
+# the first 2 columns (the names of the matrices columns and rows) to give a label 
+# to each pairwise distance
 
-pwd.df <- merge(pwd.df, geo.df, by = "islands.combo", all = FALSE) # merging distance between islands with FST df
+pwd.df <- merge(pwd.df, geo.df, by = "islands.combo", all = FALSE) # merging distance
+# between islands with FST df
 
 pwd.df$geo.dist <- pwd.df$geo.dist/1000 # going from metres to km
 
-rm(longlat, geo.matrix, geo.df)
+rm(longlat, geo.df)
 ```
 
-## 5d. Saving outcomes
+## 6c. Saving outcomes
 
-```{r saving}
+```{r saving, eval = FALSE}
 write.csv(pwd.df, "./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv", row.names = FALSE)
 write.csv(pv, "./Results/Arlequin_FST/FST_RStudio_pvalue_matrix.csv", row.names = FALSE)
 ```
 
-# 6. Linear modelling
+# 7. Linear modelling
 
-```{r loading data if necessary}
+```{r loading-data-if-necessary, eval = FALSE}
 pwd.df <- read.csv("./Results/Arlequin_FST/FST_RStudio_outcomes_df.csv")
 ```
 
-## 6a. Test model 
+## 7a. Test model 
 
-```{r test model creation}
+```{r test-model-creation}
 testLM <- lm(fst.dist ~ geo.dist, data = pwd.df) # model
 summary(testLM) # model results
 
@@ -297,7 +337,7 @@ plot(fst.dist ~ geo.dist, data = pwd.df)
 abline(coef = coef(testLM), col = 4, lwd = 2)
 ```
 
-```{r test model diagnostics}
+```{r test-model-diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once 
 plot(testLM) # diagnostic plots
 
@@ -305,27 +345,31 @@ par(mfrow = c(1,1))
 hist(testLM$residuals, breaks = 10, xlim = c(-1,1))
 
 qqPlot(testLM$residuals, line = "quartiles") # normal, possible outliers 132, 148
-shapiro.test(testLM$residuals) # W = 0.97774, p-value = 0.0001291, indicates non-normality of residuals but likely affected by the 2 outliers mentioned above
+shapiro.test(testLM$residuals) # indicates non-normality of residuals but 
+# likely affected by the 2 outliers mentioned above
 
-ncvTest(testLM) # homoscedasticity test: Chisquare = 12.31918, Df = 1, p = 0.00044833, H0 of constant variance is rejected. Supported by downward slope in Scale-location plot (plot(testLM))
+ncvTest(testLM) # homoscedasticity test: H0 of constant variance is rejected. 
+# Supported by downward slope in Scale-location plot (plot(testLM))
 
 influenceIndexPlot(testLM) # outliers
 # Cooks distances: none larger than 0.5, 
 # Studentised residuals: 132 and 148 less than -3
 # Bonferroni p-value: 132 and 148 smaller then 0.05, 
 # Hat-values: none influential, higher than 1
-outlierTest(testLM) # 148: rstudent = -5.174788, unadjusted p-value = 4.2083e-07, Bonferroni p = 0.00012625
+outlierTest(testLM)
 ```
 
 * Diagnostic Plots: indications that the relationship is linear, normal distribution of residuals, down trending scale-location plot and cone-shaped residuals vs. fitted plot therefore non-constant variance, and 132 (New Guinea to Mainland) and 148 (Normanby Island to Mainland) are potential issues.
 
-## 6b. Adjusted Model
+## 7b. Adjusted Model
 
-```{r adjusted model building}
-z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 (New_Guinea:Mainland) and 148 (Normanby_Island:Mainland) which are both negative FST values
+```{r adjusted-model-building}
+z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 (New_Guinea:Mainland) and 
+# 148 (Normanby_Island:Mainland) which are both negative FST values
 
 x <- lm(fst.dist ~ geo.dist, data = z) # creating model to take weights from
-wt <- 1 / lm(abs(x$residuals) ~ x$fitted.values)$fitted.values^2 # weighting residuals by how large they are
+wt <- 1 / lm(abs(x$residuals) ~ x$fitted.values)$fitted.values^2 # weighting 
+# residuals by how large they are
 rm(x) 
 
 LM <- lm(fst.dist ~ geo.dist, data = z, weights = wt) # weighted residual model
@@ -335,56 +379,71 @@ plot(fst.dist ~ geo.dist, data = z)
 abline(coef = coef(LM), col = 4, lwd = 2)
 ```
 
-```{r adjusted model diagnostics}
+```{r adjusted-model-diagnostics}
 par(mfrow = c(2, 2)) # changing the number of plots visible at once
 plot(LM) # diagnostic plots: non-constant variance!
 
 par(mfrow = c(1, 1))
 hist(LM$residuals, breaks = 10, xlim = c(-1,1))
 qqPlot(LM$residuals, line = "quartiles") # normal
-shapiro.test(LM$residuals) # W = 0.99402, p-value = 0.2898, indicates normality of residuals
+shapiro.test(LM$residuals) # indicates normality of residuals
 
-ncvTest(LM) # homoscedasticity test: Chisquare = 2.234525e-07, Df = 1, p = 0.99962, H0 of constant variance is not rejected. Supported by flat-ish slope in Scale-location plot (plot(testLM))
+ncvTest(LM) # homoscedasticity test: H0 of constant variance is not rejected. 
+# Supported by flat-ish slope in Scale-location plot (plot(testLM))
 
 influenceIndexPlot(LM) # outliers test, nothing concerning
 
 boxCox(LM) # recommended to stay as is
 ```
 
-## 6c. Results
-
-> Call:
-lm(formula = fst.dist ~ geo.dist, data = x, weights = wt)
-
-> Residuals:
-
-|Min|1Q|Median|3Q|Max|
-|:----:|:----:|:----:|:----:|:----:| 
-|-3.08685|-0.81585|-0.02973|0.88374|3.06125| 
-
-> Coefficients:
-
-| |Estimate|Std. Error|t value|p-value|
-|:----:|:----:|:----:|:----:|:----:|    
-|(Intercept)|0.3696|1.825e-02|20.251|< 2e-16 ***|
-|geo.dist|1.889e-05|2.386e-06|7.916|4.96e-14 ***|
-
-> Signif. codes:  0 ‘\*\*\*’ 0.001 ‘\*\*’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-> Residual standard error: 1.246 on 296 degrees of freedom  
-Multiple R-squared:  0.1747  
-Adjusted R-squared:  0.1719   
-F-statistic: 62.66 on 1 and 296 DF,  p-value: 4.959e-14
-
 * Even spread of residuals around 0
 * t-values are far from 1 and both are significant
 * Residual standard error is very high compared to the estimate
 * Only approx. 17% of the variance of fst.dist can de explained by geo.dist!
 
+# 8. Examining values below the regression line
 
-# 7. Plots 
+```{r values-under-line}
+fv <- as.vector(LM$fitted.values)
+under.fv <- cbind(z, fv)
 
-```{r correlogram}
+under.fv <- under.fv[under.fv$fst.dist < under.fv$fv,] # keeping only fst.dist 
+# values less than fitted values
+
+plot(fst.dist ~ geo.dist, data = under.fv)
+# should be all values up to the regression line
+```
+
+```{r under-line-table}
+under.fv <- under.fv[order(under.fv$geo.dist, decreasing = FALSE),] # sorting by geo.dist
+under.fv <- under.fv[order(under.fv$fst.dist, decreasing = FALSE),] # sorting by fst.dist
+
+# kable(under.fv)
+
+y <- under.fv[under.fv$fst.dist < under.fv$fv - 0.2,] # keeping only fst.dist values far below fitted values
+y <- y[order(y$islands.combo, decreasing = FALSE),] # sorting alphabetically
+kable(y)
+```
+
+```{r network, eval = FALSE}
+# in progress, not evaluated 
+library(GGally)
+library(network)
+library(sna)
+foo <- pwd[1:5,1:5]
+foo <- as.network(foo, directed = FALSE, names.eval = "weights")
+ggnet2(foo, edge.size = "weights")
+
+
+island.km <- read.csv("./data/Raw_data/island_size_data.csv", header = TRUE)
+island.km <- island.km[,c(2, 4)]
+foo %v% "area_km2" <- c(island.km[1:5,2])
+```
+
+
+# 9. Plots 
+
+```{r correlogram, eval = FALSE}
 library(corrplot)
 par(mfrow = c(1, 1))
 corrplot(pwd, 
@@ -399,7 +458,10 @@ corrplot(pwd,
          col.lim = c(-0.4, 1),
          col = RColorBrewer::brewer.pal(n = 10, name = "Spectral") # colour palette
          )
-mtext("Correlogram of FST values between Islands", at = 10, line = -5, cex = 1.3) # at = horizontal, line = height, cex = size
+mtext("Correlogram of FST values between Islands", at = 10, line = -5, cex = 1.3) 
+# at = horizontal, line = height, cex = size
+
+# this plot is best seen in the viewer rather than in the knitted pdf. Has also been saved as a separate file.
 ```
 
 From 0 to 1: 0 implying free interbreeding, 1 means the popn.s don't interbreed
