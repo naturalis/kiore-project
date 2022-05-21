@@ -311,7 +311,7 @@ pwd.df <- merge(pwd.df, geo.df, by = "islands.combo", all = FALSE) # merging dis
 
 pwd.df$geo.dist <- pwd.df$geo.dist/1000 # going from metres to km
 
-rm(longlat, geo.df)
+rm(geo.df)
 ```
 
 ## 6c. Saving outcomes
@@ -364,18 +364,18 @@ outlierTest(testLM)
 ## 7b. Adjusted Model
 
 ```{r adjusted-model-building}
-z <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 (New_Guinea:Mainland) and 
+pwd.df2 <- pwd.df[pwd.df$fst.dist >= 0,] # removing 132 (New_Guinea:Mainland) and 
 # 148 (Normanby_Island:Mainland) which are both negative FST values
 
-x <- lm(fst.dist ~ geo.dist, data = z) # creating model to take weights from
+x <- lm(fst.dist ~ geo.dist, data = pwd.df2) # creating model to take weights from
 wt <- 1 / lm(abs(x$residuals) ~ x$fitted.values)$fitted.values^2 # weighting 
 # residuals by how large they are
 rm(x) 
 
-LM <- lm(fst.dist ~ geo.dist, data = z, weights = wt) # weighted residual model
+LM <- lm(fst.dist ~ geo.dist, data = pwd.df2, weights = wt) # weighted residual model
 summary(LM) # model results
 
-plot(fst.dist ~ geo.dist, data = z)
+plot(fst.dist ~ geo.dist, data = pwd.df2)
 abline(coef = coef(LM), col = 4, lwd = 2)
 ```
 
@@ -403,9 +403,19 @@ boxCox(LM) # recommended to stay as is
 
 # 8. Examining values below the regression line
 
+```{r summary-stats}
+mean(pwd.df$fst.dist)
+median(pwd.df$fst.dist)
+range(pwd.df$fst.dist)
+# without new guinea and norm. isl.:
+mean(pwd.df2$fst.dist)
+median(pwd.df2$fst.dist)
+range(pwd.df2$fst.dist)
+```
+
 ```{r values-under-line}
 fv <- as.vector(LM$fitted.values)
-under.fv <- cbind(z, fv)
+under.fv <- cbind(pwd.df2, fv)
 
 under.fv <- under.fv[under.fv$fst.dist < under.fv$fv,] # keeping only fst.dist 
 # values less than fitted values
@@ -417,29 +427,163 @@ plot(fst.dist ~ geo.dist, data = under.fv)
 ```{r under-line-table}
 under.fv <- under.fv[order(under.fv$geo.dist, decreasing = FALSE),] # sorting by geo.dist
 under.fv <- under.fv[order(under.fv$fst.dist, decreasing = FALSE),] # sorting by fst.dist
-
+under.fv <- under.fv[order(under.fv$islands.combo, decreasing = FALSE),] # sorting alphabetically
 # kable(under.fv)
 
-y <- under.fv[under.fv$fst.dist < under.fv$fv - 0.2,] # keeping only fst.dist values far below fitted values
-y <- y[order(y$islands.combo, decreasing = FALSE),] # sorting alphabetically
-kable(y)
+rownames(under.fv) <- seq(1:nrow(under.fv))
+under.fv.copy <- tidyr::separate(under.fv, sep = ":", col = islands.combo, into = c("isl1", "isl2"))
 ```
 
-```{r network, eval = FALSE}
-# in progress, not evaluated 
-library(GGally)
-library(network)
-library(sna)
-foo <- pwd[1:5,1:5]
-foo <- as.network(foo, directed = FALSE, names.eval = "weights")
-ggnet2(foo, edge.size = "weights")
+```{r mapping-prep-1}
+# this chunk is dedicated to creating a df like this for a plot with connecting points:
+# island  lat long  group
+# aotea   123 321   aotea:borneo
+# borneo  345 543   aotea:borneo
+# aotea   123 321   aotea:kaikura
+# kaikura 567 765   aotea:kaikura
 
-
-island.km <- read.csv("./data/Raw_data/island_size_data.csv", header = TRUE)
-island.km <- island.km[,c(2, 4)]
-foo %v% "area_km2" <- c(island.km[1:5,2])
+under.fv.copy$islands.combo <- under.fv$islands.combo # adding island.combo to define where the line on the plot needs to go between (the "group")
+under.fv.copy <- rbind(under.fv.copy, under.fv.copy) # making 2 of each island combo
+nrow(under.fv.copy)
+under.fv.copy[153:306,1] <- under.fv.copy[153:306,2] # doing my own merge of the first 2 columns
+under.fv.copy <- under.fv.copy[,-2] # now removing the 2nd column now that I fixed the 1st column
 ```
 
+```{r mapping-prep-2}
+head(longlat) # checking correct columns are used
+dim(longlat)
+
+longlat[longlat$geo_long < 0,] # only longitude values up to 180 are plotting, rest 
+# is blank. Can try fixing this by adding 360 to all the negative longitude points
+longlat[6,3] <- longlat[6,3] + 360
+longlat[7,3] <- longlat[7,3] + 360
+longlat[9,3] <- longlat[9,3] + 360
+longlat[11,3] <- longlat[11,3] + 360
+longlat[14,3] <- longlat[14,3] + 360
+longlat[20,3] <- longlat[20,3] + 360
+longlat[21,3] <- longlat[21,3] + 360
+longlat[24,3] <- longlat[24,3] + 360
+
+# adding lat and long to df
+under.fv.copy <- merge(under.fv.copy, longlat, by.x = "isl1", by.y = "island.1") 
+# sorting by fst
+under.fv.copy <- under.fv.copy[order(under.fv.copy$fst.dist, decreasing = TRUE),] 
+
+rownames(under.fv.copy) <- seq(1:nrow(under.fv.copy))
+# z$islands.combo
+under.fv.copy <- dplyr::mutate(under.fv.copy, group.id = match(islands.combo, unique(islands.combo)))
+```
+
+```{r mapping}
+# library(ggrepel)
+range(under.fv.copy$fst.dist) # checking what the midpoint would be for coloured legend
+
+ggplot(under.fv.copy, aes(x = geo_long, y = geo_lat, group = group.id, colour = fst.dist)) +
+  borders("world2", colour = NA, fill = "grey85")  +
+  geom_path(size = 0.3) +
+  scale_color_gradient2(
+    low = "blue",
+    mid = "green",
+    high = "red",
+    midpoint = 0.28644,
+    name = "FST value"
+  ) +
+  geom_point(color = "black", size = 1) +
+  scale_x_continuous(limits = c(100, 240)) +
+  scale_y_continuous(limits = c(-50, 35)) +
+  theme(panel.background = element_rect(fill = "white", colour = "white"), 
+        axis.text = element_blank(), 
+        axis.title = element_blank(),
+        axis.ticks = element_blank()) +
+  # geom_text_repel(size = 3, point.size = 1, min.segment.length = 0.25) +
+  ggtitle(
+    "Map of the Island Pairs with FST Values lower than expected given Geographic Distance")
+```
+
+```{r mapping-smaller-df}
+# map of lines that are more than 0.15 lower than the regression line
+x <- under.fv[under.fv$fst.dist < under.fv$fv - 0.15,] # making df with lowest fst values
+foo <- x$islands.combo
+x <- tidyr::separate(x, sep = ":", col = islands.combo, into = c("isl1", "isl2"))
+x$islands.combo <- foo # adding island.combo to define where the line on the plot needs to go between (the "group")
+rm(foo)
+x <- rbind(x, x) # making 2 of each island combo
+rownames(x) <- seq(1:nrow(x))
+nrow(x)
+x[43:86,1] <- x[43:86,2] # doing my own merge of the first 2 columns
+x <- x[,-2] # now removing the 2nd column now that I fixed the 1st column
+x <- merge(x, longlat, by.x = "isl1", by.y = "island.1") # adding lat and long to df
+x <- x[order(x$fst.dist, decreasing = TRUE),] # sorting by fst
+rownames(x) <- seq(1:nrow(x))
+# x$islands.combo
+x <- dplyr::mutate(x, group.id = match(islands.combo, unique(islands.combo))) # making 
+# group id number column
+
+range(x$fst.dist)
+
+ggplot(x, aes(x = geo_long, y = geo_lat, group = group.id, colour = fst.dist)) +
+  borders("world2", colour = NA, fill = "grey85")  +
+  geom_path(size = 0.3) +
+  scale_color_gradient2(
+    low = "blue",
+    mid = "green",
+    high = "red",
+    midpoint = 0.214025,
+    name = "FST value"
+  ) +
+  geom_point(color = "black", size = 1) +
+  scale_x_continuous(limits = c(100, 240)) +
+  scale_y_continuous(limits = c(-50, 35)) +
+  theme(panel.background = element_rect(fill = "white", colour = "white"), 
+        axis.text = element_blank(), 
+        axis.title = element_blank(),
+        axis.ticks = element_blank()) +
+  # geom_text_repel(size = 3, point.size = 1, min.segment.length = 0.25) +
+  ggtitle(
+    "Map of the Island Pairs with FST Values far lower than expected given Geographic Distance")
+```
+
+```{r everything-map}
+# map of all connecting points
+foo <- pwd.df2$islands.combo
+y <- tidyr::separate(pwd.df2, sep = ":", col = islands.combo, into = c("isl1", "isl2"))
+y$islands.combo <- foo # adding island.combo to define where the line on the plot 
+# needs to go between (the "group")
+rm(foo)
+y <- rbind(y, y) # making 2 of each island combo
+rownames(y) <- seq(1:nrow(y))
+nrow(y)
+y[298:596,1] <- y[298:596,2] # doing my own merge of the first 2 columns
+y <- y[,-2] # now removing the 2nd column now that I fixed the 1st column
+y <- merge(y, longlat, by.x = "isl1", by.y = "island.1") # adding lat and long to df
+y <- y[order(y$fst.dist, decreasing = TRUE),] # sorting by fst
+rownames(y) <- seq(1:nrow(y))
+# x$islands.combo
+y <- dplyr::mutate(y, group.id = match(islands.combo, unique(islands.combo))) # making 
+# group id number column
+
+range(y$fst.dist)
+
+ggplot(y, aes(x = geo_long, y = geo_lat, group = group.id, colour = fst.dist)) +
+  borders("world2", colour = NA, fill = "grey85")  +
+  geom_path(size = 0.3) +
+  scale_color_gradient2(
+    low = "blue",
+    mid = "green",
+    high = "red",
+    midpoint = 0.419645,
+    name = "FST value"
+  ) +
+  geom_point(color = "black", size = 1) +
+  scale_x_continuous(limits = c(100, 240)) +
+  scale_y_continuous(limits = c(-50, 35)) +
+  theme(panel.background = element_rect(fill = "white", colour = "white"), 
+        axis.text = element_blank(), 
+        axis.title = element_blank(),
+        axis.ticks = element_blank()) +
+  ggtitle(
+    "Map of the Island Pairs with FST Values between populations")
+```
 
 # 9. Plots 
 
@@ -461,21 +605,37 @@ corrplot(pwd,
 mtext("Correlogram of FST values between Islands", at = 10, line = -5, cex = 1.3) 
 # at = horizontal, line = height, cex = size
 
-# this plot is best seen in the viewer rather than in the knitted pdf. Has also been saved as a separate file.
+# this plot is best seen in the viewer rather than in the knitted pdf. 
+# Has also been saved as a separate file.
 ```
 
 From 0 to 1: 0 implying free interbreeding, 1 means the popn.s don't interbreed
 "Values for mammal populations between subspecies, or closely related species, typical values are of the order of 5% to 20%"
 
-```{r ggplot}
-ggplot(data = z, aes(x = geo.dist, y = fst.dist)) + 
+```{r ggplot-fst}
+ggplot(data = pwd.df2, aes(x = geo.dist, y = fst.dist)) + 
   geom_point(shape = 1, colour = "black") + 
   geom_smooth(method = "lm", se = TRUE) + 
   ggtitle("Correlation between FST and Geographic Distance between Islands") +
-  xlab("Geographic Distance between 2 islands (km)") + ylab("FST Distance between 2 islands") +
+  xlab("Geographic Distance between two islands (km)") + 
+  ylab("FST value between two islands") +
   theme_light()
 ```
 
 The two negative values may be due to low sample size (could be outliers). FST is usually between 0 and 1. The negative values are also identified and non-significant.
 
+```{r ggplot-fst-2}
+fv <- as.vector(LM$fitted.values)
+pwd.df2 <- cbind(pwd.df2, fv)
+z <- dplyr::mutate(pwd.df2, colour = ifelse(fst.dist < (fv - 0.15), "red", "black"))
+
+ggplot(data = z, aes(x = geo.dist, y = fst.dist)) + 
+  geom_point(aes(colour = colour), shape = 1) +
+  scale_color_identity() +
+  geom_smooth(method = "lm", se = TRUE) + 
+  ggtitle("Correlation between FST and Geographic Distance between Islands") +
+  xlab("Geographic Distance between two islands (km)") + 
+  ylab("FST value between two islands") +
+  theme_light()
+```
 

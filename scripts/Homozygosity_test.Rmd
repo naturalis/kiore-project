@@ -350,7 +350,7 @@ boxCox(testLM) # suggests sqrt transformation
 
 ### ii. Adjusted Model and Diagnostics
 
-I have decided to remove the Mainland point for several reasons; it is an outlier with a high leverage and a value of 0, also not valuable since the Mainland is the reference point, not a new value. Testing removing 18 and 19 (New Guinea and Normanby island) saw an improvement in normality, which makes the model more reliable, however I don't think they are true outliers outside of the dataset, so the results from this model will come with this caveat. Additionally, New Guinea and Normanby island are based off of 3 and 1 specimen respectively, which mean the points may not represent their populations accurately.
+Decided to remove the Mainland point for several reasons; it is an outlier with a high leverage and a value of 0, also not valuable since the Mainland is the reference point, not a new value. Testing removing 18 and 19 (New Guinea and Normanby island) saw an improvement in normality, which makes the model more reliable, however I don't think they are true outliers outside of the dataset, so the results from this model will come with this caveat. Additionally, New Guinea and Normanby island are based off of 3 and 1 specimen respectively, which mean the points may not represent their populations accurately.
 
 ```{r adjusted-model-1-building}
 z <- per.island[-c(13, 18, 19),] # removing points mentioned

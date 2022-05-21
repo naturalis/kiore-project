@@ -114,6 +114,7 @@ r1
 plot(r1$plot$hist, main = "Mantel test", xlim = c(-0.1, 0.1)) # plotting
 # abline(v = r1$obs, col = 4, lwd = 2)
 
+r1$obs^2 # r squared
 ```
 
 * -1 suggests strong negative correlation, e.g. closer islands mean further genetically or further islands means closer genetically
