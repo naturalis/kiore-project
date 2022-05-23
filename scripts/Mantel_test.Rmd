@@ -419,20 +419,22 @@ points(longlat$geo_long, longlat$geo_lat,
 library(ggrepel)
 ```
 
-
 ```{r ggplot-map}
 # trying with ggplot
+set.seed(22)
 ggplot(longlat, aes(x = geo_long, y = geo_lat, label = island.1)) +   
   borders("world2", colour = NA, fill = "wheat1")  +
   geom_point(color = "red", size = 2) +
-  scale_x_continuous(limits = c(100, 240)) +
+  scale_x_continuous(limits = c(105, 235)) +
   scale_y_continuous(limits = c(-50, 35)) +
   theme(panel.background = element_rect(fill = "azure1", colour = "azure1"), 
         axis.text = element_blank(), 
         axis.title = element_blank(),
-        axis.ticks = element_blank()) +
+        axis.ticks = element_blank(),
+        plot.caption = element_text(hjust = 0, size = 12, family = "serif")
+        ) +
   geom_text_repel(size = 3, point.size = 1, min.segment.length = 0.25) +
-  ggtitle("Map of Islands Sampled for Polynesian Rats")
+  labs(caption = "Figure 1. Map diagram of the island locations (and mainland) from which Polynesian rat specimens were sampled.")
 ```
 
 

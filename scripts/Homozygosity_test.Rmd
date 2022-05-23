@@ -628,8 +628,10 @@ ggplot(data = per.island, aes(
     vjust = -0.8,
     size = 3
   ) +
-  ggtitle("Island Homozygosity change with Distance and Area increase") +
+  labs(caption = "Figure 4. Linear model of the distance from the mainland against Island Area, with homozygosity level shown though the colour of the points.") +
   xlab("Distance from Mainland (km)") + ylab("Area (log10 km²) + 1") +
-  theme_light()
+  theme_light() +
+  theme(plot.caption = element_text(hjust = 0, size = 12, family = "serif"))
+  
 ```
 
