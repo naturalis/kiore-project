@@ -90,7 +90,7 @@ Using RStudio and SplitsTree
     "distances as column vector" section at the bottom of the file, as
     well as the title.
 
-#### Pairwise FST testing with cleaned data
+## Pairwise FST testing with cleaned data
 
 1.  Opened PGDSpider and selected the following settings:
     1.  Data input file file format: CONVERT; select input file:
@@ -111,15 +111,13 @@ Using RStudio and SplitsTree
 3.  Copied the output from the html (or xml) to a text file and saved
     (fst_allresults.txt)
 
-#### Conducting a Mantel Test
+## Conducting a Mantel Test
 
 Using RStudio
 
-#### Testing amount of Heterozygosity
+## Testing amount of Heterozygosity
 
 Using RStudio
-
-# References
 
 [1]: https://doi.org/10.1111/j.1471-8286.2004.00597.x
 [2]: https://doi.org/10.1093/bioinformatics/btr642
