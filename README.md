@@ -10,8 +10,8 @@ located [here](https://github.com/naturalis/changing-invaders).
 
 The directory tree is:
 
-─ [data](data) - contains input files reformatted from KASP output
-─ [doc](doc) - methods description
-─ [results](results) - analysis output
-─ [scripts](scripts) - RMarkdown scripts
+- [data](data) - contains input files reformatted from KASP output
+- [doc](doc) - methods description
+- [results](results) - analysis output
+- [scripts](scripts) - RMarkdown scripts
 
