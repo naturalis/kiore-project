@@ -8,3 +8,10 @@ designed from genome sequencing of 8 _R. exulans_ specimens. That earlier
 genome assembly and primer design is contained within another git repository
 located [here](https://github.com/naturalis/changing-invaders).
 
+The source tree is:
+```
+├─── data - contains input files reformatted from KASP output
+├─── doc - methods description
+├─── results - analysis output
+└─── scripts - RMarkdown scripts
+```
