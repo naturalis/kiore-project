@@ -172,14 +172,14 @@ PGDSpider, Arlequin and STRUCTURE
 	 conversion tool for connecting population genetics and genomics programs. 
 	 Bioinformatics 28: 298-299.
 3. Opened PGDSpider and selected the following settings:
-    a. Data input file file format: CONVERT; select input file: 
-	     ratsSNPs_PGDSpyder_input.csv (output from RStudio script stated above)
-    b. Data output file file format: ARLEQUIN; select output file: 
-    c. Convert Select the type of the data: SNP; Apply
-    d. Convert
+    1. Data input file file format: CONVERT; select input file: 
+	`ratsSNPs_PGDSpyder_input.csv` (output from RStudio script stated above)
+    2. Data output file file format: ARLEQUIN; select output file: 
+    3. Convert Select the type of the data: SNP; Apply
+    4. Convert
 4. Repeated the above steps again, except: 
-    a. Data output file file format: STRUCTURE; select output file:
-    b.
+    1. Data output file file format: STRUCTURE; select output file:
+    2.
 
 At this stage I had an Arlequin input file (.arp file format) and a STRUCTURE 
 input file (.str) generated from PGDSpider for use in the Hardy-Weinberg 
@@ -190,21 +190,20 @@ Analysis and the STRUCTURE analysis. Both are on the kiore_project repository.
 	 A new series of programs to perform population genetics analyses under Linux 
 	 and Windows. Molecular Ecology Resources. 10: 564-567.
 6. Opened Arlequin application and applied the settings and procedures as 
-    follows:
-    a. File -> Open project -> File: 
-    b. Settings -> General settings -> Polymorphism control Allowed missing 
-       level per site: 0.6
-	  c. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg 
-	     equilibrium: check mark
-	  d. Start (then upon completion) View Results
+   follows:
+   1. File -> Open project -> File: 
+   2. Settings -> General settings -> Polymorphism control Allowed missing level per site: 0.6
+   3. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg equilibrium: check mark
+   4. Start (then upon completion) View Results
 7. Copied the output from the html (or xml) to a text file and saved.
 
 For Structure...
 8. I downloaded STRUCTURE verion 2.3.4, Joly 2012, from https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
 	Reference: Pritchard, J. K., Stephens, M., and Donnelly, P. (2000). Inference of population structure using
 multilocus genotype data. Genetics, 155:945–959
-9. a. File -> New project
-	 b. Fill in settings...
+9. Running the analysis:
+   1. File -> New project
+   2. Fill in settings...
 		  Step 1 of 4: Project Information
 			  Name: ratsSNPs_struc_preHWE
 			  Project Path: ...kiore-project\results\STRUCTURE
