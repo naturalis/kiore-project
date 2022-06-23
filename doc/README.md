@@ -16,9 +16,9 @@ Performed in R, see
 Hardy-Weinberg Analysis and Structure analysis using programs
 PGDSpider, Arlequin and STRUCTURE
 
-1.  Cleaned up and reformatted the dataset in RStudio to a CONVERT file
-    format (c.f. Data_cleanup script) [1]
-2.  Downloaded PGDSpider version 2.1.1.5 (May 2018) [2]
+1.  Cleaned up and reformatted the dataset in RStudio to a [CONVERT][1] file
+    format (c.f. Data_cleanup script)
+2.  Downloaded [PGDSpider][2] version 2.1.1.5 (May 2018)
 3.  Opened PGDSpider and selected the following settings:
     1.  Data input file file format: CONVERT; select input file:
         `ratsSNPs_PGDSpyder_input.csv` (output from RStudio script
@@ -33,20 +33,20 @@ At this stage we have an Arlequin input file (.arp file format) and a
 STRUCTURE input file (.str) generated from PGDSpider for use in the
 Hardy-Weinberg Analysis and the STRUCTURE analysis.
 
-1.  Downloaded Arlequin version 3.5.2.2 (released on 02.08.2015) [3]
+1.  Downloaded [Arlequin][3] version 3.5.2.2 (released on 02.08.2015)
 2.  Opened Arlequin application and applied the settings and procedures
     as follows:
-    1.  File -\> Open project -\> File:
-    2.  Settings -\> General settings -\> Polymorphism control Allowed
+    1.  File > Open project > File:
+    2.  Settings > General settings > Polymorphism control Allowed
         missing level per site: 0.6
-    3.  Settings -\> Hardy-Weinberg -\> Perform exact test of
+    3.  Settings > Hardy-Weinberg > Perform exact test of
         Hardy-Weinberg equilibrium: check mark
     4.  Start (then upon completion) View Results
 3.  Copied the output from the html (or xml) to a text file and saved.
 
 For STRUCTURE:
 
-1.  Downloaded STRUCTURE verion 2.3.4 [4]
+1.  Downloaded [STRUCTURE][4] version 2.3.4
 2.  Running the analysis:
     1.  File > New project
     2.  Fill in settings: 
@@ -72,9 +72,9 @@ For STRUCTURE:
 
 Using RStudio and SplitsTree
 
-1.  Created a Phylip (.phy) [5] file in R using
+1.  Created a [Phylip][5] (.phy) file in R using
     NeighborNet_Treebuilding.Rmd
-2.  Downloaded and installed SplitsTree4 [6]
+2.  Downloaded and installed [SplitsTree4][6]
 3.  Opened the .phy file in SplitsTree, selected "protein" when prompted
     the data type (to allow for more symbols than just ATCG)
 4.  Saved as NEXUS file
@@ -83,7 +83,7 @@ Using RStudio and SplitsTree
     after line 2239 "End CHARACTERS". Saved.
 6.  Re-opened in SplitsTree. Under "Distances", selected HKY85 (which
     now works), and empirical frequencies.
-7.  Exported the NeighborNet [7] tree as an image and exported the
+7.  Exported the [NeighborNet][7] tree as an image and exported the
     distance matrix as a tab-delimited text file for use in Mantel test
     later.
 8.  Opened the exported genetic distances text file and deleted the
@@ -121,10 +121,10 @@ Using RStudio
 
 # References
 
-[1] https://doi.org/10.1111/j.1471-8286.2004.00597.x
-[2] https://doi.org/10.1093/bioinformatics/btr642
-[3] https://doi.org/10.1111/j.1755-0998.2010.02847.x
-[4] https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
-[5] https://evolution.genetics.washington.edu/phylip.html
-[6] https://doi.org/10.1093/molbev/msj030
-[7] https://doi.org/10.1093/molbev/msh018
+[1]: https://doi.org/10.1111/j.1471-8286.2004.00597.x
+[2]: https://doi.org/10.1093/bioinformatics/btr642
+[3]: https://doi.org/10.1111/j.1755-0998.2010.02847.x
+[4]: https://web.stanford.edu/group/pritchardlab/structure_software/release_versions/v2.3.4/html/structure.html
+[5]: https://evolution.genetics.washington.edu/phylip.html
+[6]: https://doi.org/10.1093/molbev/msj030
+[7]: https://doi.org/10.1093/molbev/msh018
