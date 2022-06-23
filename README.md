@@ -8,45 +8,6 @@ designed from genome sequencing of 8 _R. exulans_ specimens. That earlier
 genome assembly and primer design is contained within another git repository
 located [here](https://github.com/naturalis/changing-invaders).
 
-### Abstract
-
-**Background**   
-Rattus exulans, known as kiore or the Polynesian rat, was introduced to islands 
-across the Pacific by humans during the Austronesian expansion. I expect genetic 
-differences will exist between the R. exulans populations because of assorted 
-ecological pressures combined with successive founder effects and varying time 
-periods since colonisation on each island. This research project aims to add to 
-current research on the spread of the Polynesian rat throughout the Pacific by 
-exploring how island evolutionary processes and aided dispersal by humans 
-affected the rat genotype.  
-
-**Methods**   
-This project will be guided by the questions “Which R. exulans island 
-populations demonstrate the closest genetic relationships?”, “What is the 
-correlation between the geographical distances of insular R. exulans populations 
-and the genetic distances?”, and “How prevalent is increased homozygosity in 
-Pacific R. exulans populations successively further from the mainland 
-populations, and is inbreeding correlated with island size here?” The process of 
-answering these questions will involve the construction of a NeighborNet 
-haplotype network, comparing geographic island distances with pairwise genetic 
-distances between populations, and heterozygosity testing respectively.
-
-**Expected Results**  
-It is expected that R. exulans populations from neighbouring islands and islands 
-humans colonised closely in time will exhibit the least genetic differences and 
-therefore be close to each other on the haplotype network and have shorter mean 
-genetic distances between them. However, it is also expected that outliers will 
-exist where there was increased or decreased movement between islands by humans 
-and therefore rats. Homozygosity within each population is expected to increase 
-the further away the colonised island is from the mainland Polynesian rat 
-population in southeast Asia. The future results of this project will aid in 
-clarifying the relationships between R. exulans populations and the order of 
-colonisation. They may be used as a proxy for the sequence of human settlement, 
-improve understanding of evolutionary processes and allow the Polynesian rat to 
-be used as a model for human aided dispersal.  
-
-____
-
 ### Methods  
 
 #### Cleaning the raw data
