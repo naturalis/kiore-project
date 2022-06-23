@@ -1,0 +1,4 @@
+- [ratsSNPs_PGDSpider_input_CLEAN.txt](ratsSNPs_PGDSpider_input_CLEAN.txt)
+- [ratsSNPs_PGDSpider_input.txt](ratsSNPs_PGDSpider_input.txt)
+- [README.md](README.md)
+- [PGDSpider_log.spid](PGDSpider_log.spid)
