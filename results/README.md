@@ -1,6 +1,6 @@
 This folder contains results from the following tools and analyses:
 
-1. Arlequin_HardyWeiberg
+1. [Arlequin_HardyWeinberg](Arlequin_HardyWeinberg)
 	- Arlequin_log.txt
 	- hwe_allresults_14032022.txt      
 	- hwe_results_by_island_14032022
@@ -9,18 +9,18 @@ This folder contains results from the following tools and analyses:
 	- ratsSNPs_arl_input.xml
 	- ratsSNPs_arl_input_main.htm      
 	- ratsSNPs_arl_input_tree.htm
-2. RStudio_Heterozygosity
+2. [RStudio_Homozygosity](RStudio_Homozygosity)
 	- heterozygosity_testing_results_table.csv
-3. RStudio_Mantel_Test_&_Distances
+3. [RStudio_Mantel_Test_&_Distances](RStudio_Mantel_Test_&_Distances)
 	- distance_matrices_plot.png                         
 	- distance_matrices_plot_PRECLEANUP.jpg              
 	- distance_matrices_quantilelines_plot.png           
 	- distance_matrices_quantilelines_plot_PRECLEANUP.jpg
-4. SplitsTree_NeighborNet
+4. [SplitsTree_NeighborNet](SplitsTree_NeighborNet)
 	- NeighborNet_clean_broad.png
 	- NeighborNet_clean_detailled.png
 	- NeighborNet_PRECLEANUP.png
-5. STRUCTURE
+5. [STRUCTURE](STRUCTURE)
 	- as_pdf
 		- mainparams and extraparams
 		- PlotData
@@ -28,7 +28,7 @@ This folder contains results from the following tools and analyses:
 		- Results_compressed.zip
 	- project_data
 	- ratsSNPs_struc_preHWE.spj
-6. StructureHarvester
+6. [StructureHarvester](StructureHarvester)
 	- deltaK.eps, .pdf and .png
 	- evannoTable.tab
 	- Kn.indfile and .popfile   
