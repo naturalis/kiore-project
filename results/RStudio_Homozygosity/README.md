@@ -1,0 +1,3 @@
+- [README.md](README.md)
+- [homozygosity_testing_results_table.csv](homozygosity_testing_results_table.csv)
+- [homozygosity_distance_area_scatterplot.png](homozygosity_distance_area_scatterplot.png)
