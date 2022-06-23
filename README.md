@@ -172,14 +172,14 @@ PGDSpider, Arlequin and STRUCTURE
 	 conversion tool for connecting population genetics and genomics programs. 
 	 Bioinformatics 28: 298-299.
 3. Opened PGDSpider and selected the following settings:
-	 a. Data input file file format: CONVERT; select input file: 
-	    ratsSNPs_PGDSpyder_input.csv (output from RStudio script stated above)
-	 b. Data output file file format: ARLEQUIN; select output file: 
-	 c. Convert Select the type of the data: SNP; Apply
-	 d. Convert
+    a. Data input file file format: CONVERT; select input file: 
+	     ratsSNPs_PGDSpyder_input.csv (output from RStudio script stated above)
+    b. Data output file file format: ARLEQUIN; select output file: 
+    c. Convert Select the type of the data: SNP; Apply
+    d. Convert
 4. Repeated the above steps again, except: 
-	a. Data output file file format: STRUCTURE; select output file:
-	b.
+    a. Data output file file format: STRUCTURE; select output file:
+    b.
 
 At this stage I had an Arlequin input file (.arp file format) and a STRUCTURE 
 input file (.str) generated from PGDSpider for use in the Hardy-Weinberg 
@@ -190,13 +190,13 @@ Analysis and the STRUCTURE analysis. Both are on the kiore_project repository.
 	 A new series of programs to perform population genetics analyses under Linux 
 	 and Windows. Molecular Ecology Resources. 10: 564-567.
 6. Opened Arlequin application and applied the settings and procedures as 
-   follows:
-	 a. File -> Open project -> File: 
-	 b. Settings -> General settings -> Polymorphism control Allowed missing level 
-	    per site: 0.6
-	 c. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg 
-	    equilibrium: check mark
-	 d. Start (then upon completion) View Results
+    follows:
+    a. File -> Open project -> File: 
+    b. Settings -> General settings -> Polymorphism control Allowed missing 
+       level per site: 0.6
+	  c. Settings -> Hardy-Weinberg -> Perform exact test of Hardy-Weinberg 
+	     equilibrium: check mark
+	  d. Start (then upon completion) View Results
 7. Copied the output from the html (or xml) to a text file and saved.
 
 For Structure...
