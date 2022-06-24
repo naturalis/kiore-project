@@ -37,3 +37,4 @@ This folder contains results from the following tools and analyses:
 	- meanLnProb.eps, .pdf and .png 
 	- rawSummary.tab
 	- summary.html
+7. [STRUCTURE_Fst](STRUCTURE_Fst)
