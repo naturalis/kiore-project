@@ -20,13 +20,13 @@ PGDSpider, Arlequin and STRUCTURE
     format (c.f. Data_cleanup script)
 2.  Downloaded [PGDSpider][2] version 2.1.1.5 (May 2018)
 3.  Opened PGDSpider and selected the following settings:
-    1.  Data input file file format: CONVERT; select input file:
-        `ratsSNPs_PGDSpyder_input.csv` (output from RStudio script
+    1.  Data input file format: CONVERT; select input file:
+        `ratsSNPs_PGDSpyder_input.txt` (output from RStudio script
         stated above)
-    2.  Data output file file format: ARLEQUIN; select output file:
+    2.  Data output file format: ARLEQUIN; select output file:
     3.  Convert Select the type of the data: SNP; Apply
     4.  Convert
-4.  Repeated the above steps again, except with data output file file
+4.  Repeated the above steps again, except with data output file
     format STRUCTURE
 
 At this stage we have an Arlequin input file (.arp file format) and a
@@ -50,15 +50,18 @@ For STRUCTURE:
 2.  Running the analysis:
     1.  File > New project
     2.  Fill in settings: 
-        1. Project name: ratsSNPs_struc_preHWE, Project Path: 
-           kiore-project/results/STRUCTURE Data File:
-           ratsSNPs_Structure_input_preHWE.str 
-        2. Information of Input dataset: Number of Individuals: 379 Number of 
-           Loci: 282 Ploidy: 2 Missing Data is Represented by: -9 
-        3. Format of input dataset: Check row of data names (rest unckecked)
+        1. Project name: ratsSNPs_struc_preHWE (or -CLEAN), 
+           Project Path: kiore-project/results/STRUCTURE 
+           Data File: ratsSNPs_Structure_input_preHWE.str (or -CLEAN) 
+        2. Information of Input dataset: 
+             Number of Individuals: 379 (pre-HW) / 369 (CLEAN)
+             Number of Loci: 282
+             Ploidy: 2 
+             Missing Data is Represented by: -9 
+        3. Format of input dataset: Check row of marker names (rest unchecked)
         4. Format of input dataset (cont'd): Check Individual ID for each 
-           individual; Check Putative population origin for each individual (rest 
-           unckecked)
+           individual; Check Putative population origin for each individual 
+           (rest unchecked)
     3.  Parameter set > New
     4.  Filled in settings: Burnin: 5,000; MCMC reps after Burnin: 50,000; Use 
         Admixture Model; Compute the Probability of the Data (for estimating K);
