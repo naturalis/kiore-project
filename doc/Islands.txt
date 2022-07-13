@@ -1,0 +1,27 @@
+These are the islands in the order of appearance in the cleaned STRUCTURE files:
+
+Aotea
+Borneo
+Southland
+GreatMercury
+Halmahera
+Hatutaa
+Honuea
+Kaikura
+Kamaka
+Kayangel
+Late_Island
+Mainland
+Malenge
+Mohotani
+Motukawa
+NewBritain
+NewGuinea
+Normanby
+Rakiura
+Reiono
+Rimatuu
+Slipper
+Sulawesi
+Tahanea
+Wake_Island
