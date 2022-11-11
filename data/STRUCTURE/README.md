@@ -11,4 +11,5 @@ This directory contains input files for STRUCTURE. These files are generated
   [this](../PGDSpider/ratsSNPs_PGDSpyder_input_CLEAN.csv) file. 
 - [ratsSNPS_Structure_input_CLEAN.str](ratsSNPS_Structure_input_CLEAN.str) - 
   input for fastStructure, generated from ratsSNPS_Structure_input_CLEAN
-  using ../../script/make_fs_input.pl
+  using ../../script/make_fs_input.pl, which also requires the sanitized
+  metadata file from the KASP output (see data/Raw_data).
